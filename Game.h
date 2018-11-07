@@ -41,12 +41,15 @@ public:
 	
 private:
 
+	void joinGame();
+
 	SceneManager* sceneManager;
 	Ogre::Camera* camera;
 	Ogre::SceneNode* cameraNode;
 	OgreBites::TrayManager* trayManager;
 	OgreBites::AdvancedRenderControls* controls;
 	OgreBites::CameraMan* cameraMan;
+	Ogre::Real deltaTime;
 	
 	bool keys[255];
 	bool mouseButtons[10];

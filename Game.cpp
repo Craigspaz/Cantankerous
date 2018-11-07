@@ -3,12 +3,14 @@
 using namespace Ogre;
 using namespace OgreBites;
 
-Game::Game() : ApplicationContext("Cantankerous")
+Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre context
 {
 	gameMode = -1;
 	camera = NULL;
 	client = NULL;
 	server = NULL;
+
+	// Initializes an array of bools to store if a key is down or not
 	for (int i = 0; i < 255; i++)
 	{
 		keys[i] = false;
@@ -16,13 +18,8 @@ Game::Game() : ApplicationContext("Cantankerous")
 }
 Game::~Game()
 {
-	sceneManager->getRootSceneNode()->removeAndDestroyAllChildren(); 
-	//delete cameraNode;
-	//delete sceneManager;
-	//delete camera;
-	//delete trayManager;
-	//delete controls;
-	//sdelete cameraMan;
+	sceneManager->getRootSceneNode()->removeAndDestroyAllChildren();
+	//TODO: Clean up memory allocated
 }
 	
 void Game::setup()
@@ -33,8 +30,6 @@ void Game::setup()
 
 	// get a pointer to the already created root
 	Root* root = getRoot();
-	//Ogre::ConfigDialog* diag = new OgreBites::ConfigDialog();
-	//root->showConfigDialog(diag);
 
 	sceneManager = root->createSceneManager();
 
@@ -102,7 +97,8 @@ void Game::setup()
 	light1->setPosition(-10, 40, 20);
 	light1->setSpecularColour(ColourValue::White);
 
-
+	// Create a test plane to verify everything is working
+	/// TMP
 	Plane floorPlane(Vector3::UNIT_Y, 0);
 	MeshManager::getSingleton().createPlane("floor", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, 1000.0, 1000.0, 10, 10, true, 1, 20.0, 20.0, Vector3::UNIT_Z);
 	Entity* floor = sceneManager->createEntity("floor");
@@ -110,17 +106,24 @@ void Game::setup()
 	SceneNode* node = sceneManager->getRootSceneNode()->createChildSceneNode();
 	node->attachObject(floor);
 	node->setPosition(Vector3(0, 0, 0));
+	/// END TMP
+}
+
+void Game::joinGame()
+{
+	OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
+	std::cout << box->getText() << std::endl;
+	client = new Client("127.0.0.1", 1234);
+	trayManager->destroyAllWidgets();
+	gameMode = 1;
 }
 
 void Game::buttonHit(Button* button)
 {
+	// Checks the name of the button to determine what action to take
 	if (button->getName() == "Host")
 	{
 		trayManager->destroyAllWidgets();
-		//delete controls;
-		//delete trayManager;
-		//trayManager = new OgreBites::TrayManager("Controls", getRenderWindow(), this);  // create a tray interface
-		//controls = new AdvancedRenderControls(trayManager, camera);
 		server = new Server();
 		client = new Client("127.0.0.1", 1234);
 		gameMode = 2;
@@ -128,21 +131,13 @@ void Game::buttonHit(Button* button)
 	else if (button->getName() == "Join")
 	{
 		trayManager->destroyAllWidgets();
-		//delete controls;
-		//delete trayManager;
-		//trayManager = new OgreBites::TrayManager("Controls", getRenderWindow(), this);  // create a tray interface
-		//controls = new AdvancedRenderControls(trayManager, camera);
-		trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 200);
+		trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 100);
 		trayManager->createButton(TL_CENTER, "Submit", "Submit");
 		gameMode = 0;
 	}
 	else if (button->getName() == "Submit")
 	{
-		OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
-		std::cout << box->getText() << std::endl;
-		client = new Client("127.0.0.1", 1234);
-		trayManager->destroyAllWidgets();
-		gameMode = 1;
+		joinGame();
 	}
 	else if (button->getName() == "Exit")
 	{
@@ -174,6 +169,7 @@ bool Game::keyPressed(const KeyboardEvent& event)
 		getRoot()->queueEndRendering();
 	}
 
+	// if the user clicked join game handle all key presses as input to go to the textbox
 	if (gameMode == 0)
 	{
 		OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
@@ -183,6 +179,10 @@ bool Game::keyPressed(const KeyboardEvent& event)
 			std::string tmp = box->getText();
 			tmp = tmp.substr(0, tmp.size() - 1);
 			box->setText(tmp);
+		}
+		else if (characterToAdd == '\n' || characterToAdd == '\r\n' || characterToAdd == '\n\r' || characterToAdd == 13)
+		{
+			joinGame();
 		}
 		else
 		{
@@ -206,7 +206,7 @@ bool Game::frameRenderingQueued(const Ogre::FrameEvent& event)
 {
 	trayManager->frameRendered(event);
 	//mControls->frameRendered(evt);
-	Ogre::Real deltaTime = event.timeSinceLastFrame;
+	deltaTime += event.timeSinceLastFrame;
 	while (deltaTime >= 1.0f / 60.0f)
 	{
 		//update the game
