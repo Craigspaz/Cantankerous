@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Client.h"
 #include "Server.h"
+#include "Level.h"
 
 using namespace Ogre;
 using namespace OgreBites;

@@ -86,7 +86,7 @@ void Game::setup()
 
 	// disable default camera control so the character can do its own
 	// CS_FREELOOK, CS_ORBIT, CS_MANUAL
-	cameraMan->setStyle(OgreBites::CS_MANUAL);
+	cameraMan->setStyle(OgreBites::CS_FREELOOK);
 
 	// use small amount of ambient lighting
 	sceneManager->setAmbientLight(ColourValue(0.3f, 0.3f, 0.3f));
@@ -99,14 +99,17 @@ void Game::setup()
 
 	// Create a test plane to verify everything is working
 	/// TMP
-	Plane floorPlane(Vector3::UNIT_Y, 0);
-	MeshManager::getSingleton().createPlane("floor", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, 1000.0, 1000.0, 10, 10, true, 1, 20.0, 20.0, Vector3::UNIT_Z);
-	Entity* floor = sceneManager->createEntity("floor");
-	floor->setMaterialName("Examples/Rockwall");
-	SceneNode* node = sceneManager->getRootSceneNode()->createChildSceneNode();
-	node->attachObject(floor);
-	node->setPosition(Vector3(0, 0, 0));
+	//Plane floorPlane(Vector3::UNIT_Y, 0);
+	//MeshManager::getSingleton().createPlane("floor", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, 1000.0, 1000.0, 10, 10, true, 1, 20.0, 20.0, Vector3::UNIT_Z);
+	//Entity* floor = sceneManager->createEntity("floor");
+	//floor->setMaterialName("Examples/Rockwall");
+	//SceneNode* node = sceneManager->getRootSceneNode()->createChildSceneNode();
+	//node->attachObject(floor);
+	//node->setPosition(Vector3(0, 0, 0));
 	/// END TMP
+	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	Level testLevel(path + "testLevel.txt",sceneManager);
 }
 
 void Game::joinGame()
@@ -198,7 +201,7 @@ bool Game::keyPressed(const KeyboardEvent& event)
 bool Game::keyReleased(const KeyboardEvent& event)
 {
 	keys[event.keysym.sym] = false;
-	//cameraMan->keyPressed(event);
+	cameraMan->keyPressed(event);
 	return true;
 }
 	
@@ -225,7 +228,7 @@ bool Game::mouseMoved(const MouseMotionEvent& event)
 {
 	if (trayManager->mouseMoved(event)) return true;
 
-	//cameraMan->mouseMoved(event);
+	cameraMan->mouseMoved(event);
 	return true;
 }
 bool Game::mousePressed(const MouseButtonEvent& event)

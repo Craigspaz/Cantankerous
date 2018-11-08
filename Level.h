@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <Ogre.h>
+#include "Tile.h"
 
 class Level
 {
@@ -19,6 +20,7 @@ private:
 
 	std::string filename;
 	Ogre::SceneManager* sceneManager;
+	std::vector<Tile*>* tiles;
 };
 
 #endif
