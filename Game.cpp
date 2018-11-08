@@ -3,26 +3,18 @@
 using namespace Ogre;
 using namespace OgreBites;
 
-Game::Game() : ApplicationContext("Cantankerous")
+Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre context
 {
 	gameMode = -1;
 	camera = NULL;
 	client = NULL;
 	server = NULL;
-	for (int i = 0; i < 255; i++)
-	{
-		keys[i] = false;
-	}
 }
 Game::~Game()
 {
-	sceneManager->getRootSceneNode()->removeAndDestroyAllChildren(); 
-	//delete cameraNode;
-	//delete sceneManager;
-	//delete camera;
-	//delete trayManager;
-	//delete controls;
-	//sdelete cameraMan;
+	sceneManager->getRootSceneNode()->removeAndDestroyAllChildren();
+	delete currentLevel;
+	//TODO: Clean up memory allocated
 }
 	
 void Game::setup()
@@ -33,8 +25,6 @@ void Game::setup()
 
 	// get a pointer to the already created root
 	Root* root = getRoot();
-	//Ogre::ConfigDialog* diag = new OgreBites::ConfigDialog();
-	//root->showConfigDialog(diag);
 
 	sceneManager = root->createSceneManager();
 
@@ -58,12 +48,13 @@ void Game::setup()
 	this->cameraNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 
 	// create the camera
-	this->camera = sceneManager->createCamera("myCam");
-	camera->setNearClipDistance(5); // specific to this sample
+	this->camera = sceneManager->createCamera("camera");
+	camera->setNearClipDistance(5);
 	camera->setAutoAspectRatio(true);
 	camera->lookAt(0, 0, 0);
 	this->cameraNode->attachObject(camera);
-	this->cameraNode->setPosition(0, 150, 222);
+	this->cameraNode->setPosition(0, 200, 100);
+	camera->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(-50)));
 
 	// and tell it to render into the main window
 	getRenderWindow()->addViewport(camera);
@@ -89,8 +80,8 @@ void Game::setup()
 	sceneManager->setShadowTextureSize(1024);
 	sceneManager->setShadowTextureCount(1);
 
-	// disable default camera control so the character can do its own
-	// CS_FREELOOK, CS_ORBIT, CS_MANUAL
+	//sceneManager->setSkyDome(true, "Examples/CloudySky", 5, 8);
+
 	cameraMan->setStyle(OgreBites::CS_MANUAL);
 
 	// use small amount of ambient lighting
@@ -102,25 +93,43 @@ void Game::setup()
 	light1->setPosition(-10, 40, 20);
 	light1->setSpecularColour(ColourValue::White);
 
+	// Create a test plane to verify everything is working
+	/// TMP
+	//Plane floorPlane(Vector3::UNIT_Y, 0);
+	//MeshManager::getSingleton().createPlane("floor", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, 1000.0, 1000.0, 10, 10, true, 1, 20.0, 20.0, Vector3::UNIT_Z);
+	//Entity* floor = sceneManager->createEntity("floor");
+	//floor->setMaterialName("Examples/Rockwall");
+	//SceneNode* node = sceneManager->getRootSceneNode()->createChildSceneNode();
+	//node->attachObject(floor);
+	//node->setPosition(Vector3(0, 0, 0));
+	/// END TMP
 
-	Plane floorPlane(Vector3::UNIT_Y, 0);
-	MeshManager::getSingleton().createPlane("floor", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, 1000.0, 1000.0, 10, 10, true, 1, 20.0, 20.0, Vector3::UNIT_Z);
-	Entity* floor = sceneManager->createEntity("floor");
-	floor->setMaterialName("Examples/Rockwall");
-	SceneNode* node = sceneManager->getRootSceneNode()->createChildSceneNode();
-	node->attachObject(floor);
-	node->setPosition(Vector3(0, 0, 0));
+	Entity* tmpEntity = sceneManager->createEntity(SceneManager::PrefabType::PT_CUBE);
+	SceneNode* tmpSceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+	tmpSceneNode->setPosition(Ogre::Vector3(0, 10, 0));
+	tmpSceneNode->scale(Ogre::Vector3(1 / 10., 1 / 10., 1 / 10.));
+	tmpSceneNode->attachObject(tmpEntity);
+
+	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	currentLevel = new Level(path + "testLevel.txt",sceneManager);
+}
+
+void Game::joinGame()
+{
+	OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
+	std::cout << box->getText() << std::endl;
+	client = new Client("127.0.0.1", 1234);
+	trayManager->destroyAllWidgets();
+	gameMode = 1;
 }
 
 void Game::buttonHit(Button* button)
 {
+	// Checks the name of the button to determine what action to take
 	if (button->getName() == "Host")
 	{
 		trayManager->destroyAllWidgets();
-		//delete controls;
-		//delete trayManager;
-		//trayManager = new OgreBites::TrayManager("Controls", getRenderWindow(), this);  // create a tray interface
-		//controls = new AdvancedRenderControls(trayManager, camera);
 		server = new Server();
 		client = new Client("127.0.0.1", 1234);
 		gameMode = 2;
@@ -128,21 +137,17 @@ void Game::buttonHit(Button* button)
 	else if (button->getName() == "Join")
 	{
 		trayManager->destroyAllWidgets();
-		//delete controls;
-		//delete trayManager;
-		//trayManager = new OgreBites::TrayManager("Controls", getRenderWindow(), this);  // create a tray interface
-		//controls = new AdvancedRenderControls(trayManager, camera);
-		trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 200);
+		trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 100);
 		trayManager->createButton(TL_CENTER, "Submit", "Submit");
 		gameMode = 0;
 	}
 	else if (button->getName() == "Submit")
 	{
-		OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
-		std::cout << box->getText() << std::endl;
-		client = new Client("127.0.0.1", 1234);
+		joinGame();
+	}
+	else if (button->getName() == "Resume")
+	{
 		trayManager->destroyAllWidgets();
-		gameMode = 1;
 	}
 	else if (button->getName() == "Exit")
 	{
@@ -171,9 +176,21 @@ bool Game::keyPressed(const KeyboardEvent& event)
 {
 	if(event.keysym.sym == SDLK_ESCAPE)
 	{
-		getRoot()->queueEndRendering();
+		//getRoot()->queueEndRendering();
+		//exit(0);
+		if (gameMode == -1 || gameMode == 0)
+		{
+			exit(0);
+		}
+		else
+		{
+			trayManager->destroyAllWidgets();
+			trayManager->createButton(TL_CENTER, "Resume", "Resume");
+			trayManager->createButton(TL_CENTER, "Exit", "Exit");
+		}
 	}
 
+	// if the user clicked join game handle all key presses as input to go to the textbox
 	if (gameMode == 0)
 	{
 		OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
@@ -184,21 +201,62 @@ bool Game::keyPressed(const KeyboardEvent& event)
 			tmp = tmp.substr(0, tmp.size() - 1);
 			box->setText(tmp);
 		}
+		else if (characterToAdd == '\n' || characterToAdd == '\r\n' || characterToAdd == '\n\r' || characterToAdd == 13)
+		{
+			joinGame();
+		}
 		else
 		{
 			std::string str(1, characterToAdd);
 			box->appendText(str);
 		}
 	}
+	else if(gameMode != -1)
+	{
+		if (event.keysym.sym == SDLK_RIGHT)
+		{
+			if (cameraNode->getPosition().x + 10 > currentLevel->getMaxBoundary().x)
+			{
+				return true;
+			}
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(10, 0, 0));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_LEFT)
+		{
+			if (cameraNode->getPosition().x - 10 < currentLevel->getMinBoundary().x)
+			{
+				return true;
+			}
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(-10, 0, 0));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_UP)
+		{
+			if (cameraNode->getPosition().z - 10 - 150 < currentLevel->getMinBoundary().z)
+			{
+				return true;
+			}
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, -10));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_DOWN)
+		{
+			if (cameraNode->getPosition().z + 10 - 100 > currentLevel->getMaxBoundary().z)
+			{
+				return true;
+			}
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, 10));
+			return true;
+		}
+	}
 
 	//cameraMan->keyPressed(event);
-	keys[event.keysym.sym] = true;
 	return true;
 }
 bool Game::keyReleased(const KeyboardEvent& event)
 {
-	keys[event.keysym.sym] = false;
-	//cameraMan->keyPressed(event);
+	cameraMan->keyPressed(event);
 	return true;
 }
 	
@@ -206,7 +264,7 @@ bool Game::frameRenderingQueued(const Ogre::FrameEvent& event)
 {
 	trayManager->frameRendered(event);
 	//mControls->frameRendered(evt);
-	Ogre::Real deltaTime = event.timeSinceLastFrame;
+	deltaTime += event.timeSinceLastFrame;
 	while (deltaTime >= 1.0f / 60.0f)
 	{
 		//update the game
@@ -225,7 +283,7 @@ bool Game::mouseMoved(const MouseMotionEvent& event)
 {
 	if (trayManager->mouseMoved(event)) return true;
 
-	//cameraMan->mouseMoved(event);
+	cameraMan->mouseMoved(event);
 	return true;
 }
 bool Game::mousePressed(const MouseButtonEvent& event)

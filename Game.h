@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Client.h"
 #include "Server.h"
+#include "Level.h"
 
 using namespace Ogre;
 using namespace OgreBites;
@@ -41,19 +42,21 @@ public:
 	
 private:
 
+	void joinGame();
+
 	SceneManager* sceneManager;
 	Ogre::Camera* camera;
 	Ogre::SceneNode* cameraNode;
 	OgreBites::TrayManager* trayManager;
 	OgreBites::AdvancedRenderControls* controls;
 	OgreBites::CameraMan* cameraMan;
-	
-	bool keys[255];
-	bool mouseButtons[10];
+	Ogre::Real deltaTime;
+
 	char gameMode;
 
 	Server* server;
 	Client* client;
+	Level* currentLevel;
 };	
 
 #endif
