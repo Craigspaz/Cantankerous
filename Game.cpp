@@ -144,6 +144,10 @@ void Game::buttonHit(Button* button)
 	{
 		joinGame();
 	}
+	else if (button->getName() == "Resume")
+	{
+		trayManager->destroyAllWidgets();
+	}
 	else if (button->getName() == "Exit")
 	{
 		exit(0);
@@ -171,7 +175,18 @@ bool Game::keyPressed(const KeyboardEvent& event)
 {
 	if(event.keysym.sym == SDLK_ESCAPE)
 	{
-		getRoot()->queueEndRendering();
+		//getRoot()->queueEndRendering();
+		//exit(0);
+		if (gameMode == -1 || gameMode == 0)
+		{
+			exit(0);
+		}
+		else
+		{
+			trayManager->destroyAllWidgets();
+			trayManager->createButton(TL_CENTER, "Resume", "Resume");
+			trayManager->createButton(TL_CENTER, "Exit", "Exit");
+		}
 	}
 
 	// if the user clicked join game handle all key presses as input to go to the textbox

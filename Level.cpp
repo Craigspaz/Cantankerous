@@ -21,7 +21,7 @@ void Level::loadLevel()
 	std::ifstream file(filename);
 	std::string line;
 	int row = 0;
-	int scale = 100;
+	int scale = 25;
 	while (std::getline(file, line))
 	{
 		for (int i = 0; i < line.length(); i++)
