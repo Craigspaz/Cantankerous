@@ -12,6 +12,8 @@ public:
 	Level(std::string filename, Ogre::SceneManager* manager);
 	~Level();
 
+	Ogre::Vector3 getMinBoundary();
+	Ogre::Vector3 getMaxBoundary();
 
 private:
 
@@ -21,6 +23,9 @@ private:
 	std::string filename;
 	Ogre::SceneManager* sceneManager;
 	std::vector<Tile*>* tiles;
+	
+	Ogre::Vector3 minCorner;
+	Ogre::Vector3 maxCorner;
 };
 
 #endif

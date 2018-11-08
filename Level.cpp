@@ -16,6 +16,17 @@ Level::~Level()
 	
 }
 
+
+Ogre::Vector3 Level::getMinBoundary()
+{
+	return minCorner;
+}
+
+Ogre::Vector3 Level::getMaxBoundary()
+{
+	return maxCorner;
+}
+
 void Level::loadLevel()
 {
 	std::ifstream file(filename);
@@ -30,11 +41,17 @@ void Level::loadLevel()
 			{
 				Tile* tile = new Tile(Ogre::Vector3(i, 0, row) , sceneManager, GRASS_TILE, scale);
 				tiles->push_back(tile);
+				if (row == 0 && i == 0)
+				{
+					minCorner = tile->getPosition();
+				}
+				maxCorner = tile->getPosition();
 			}
 			else if (line.at(i) == 'd') // dirt
 			{
 				Tile* tile = new Tile(Ogre::Vector3(i, 0, row), sceneManager, DIRT_TILE, scale);
 				tiles->push_back(tile);
+				maxCorner = tile->getPosition();
 			}
 			else if (line.at(i) == '\n' || line.at(i) == '\r\n')
 			{

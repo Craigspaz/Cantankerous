@@ -56,6 +56,7 @@ private:
 
 	Server* server;
 	Client* client;
+	Level* currentLevel;
 };	
 
 #endif

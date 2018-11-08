@@ -13,6 +13,7 @@ Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre contex
 Game::~Game()
 {
 	sceneManager->getRootSceneNode()->removeAndDestroyAllChildren();
+	delete currentLevel;
 	//TODO: Clean up memory allocated
 }
 	
@@ -79,8 +80,8 @@ void Game::setup()
 	sceneManager->setShadowTextureSize(1024);
 	sceneManager->setShadowTextureCount(1);
 
-	// disable default camera control so the character can do its own
-	// CS_FREELOOK, CS_ORBIT, CS_MANUAL
+	//sceneManager->setSkyDome(true, "Examples/CloudySky", 5, 8);
+
 	cameraMan->setStyle(OgreBites::CS_MANUAL);
 
 	// use small amount of ambient lighting
@@ -111,7 +112,7 @@ void Game::setup()
 
 	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
 	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
-	Level testLevel(path + "testLevel.txt",sceneManager);
+	currentLevel = new Level(path + "testLevel.txt",sceneManager);
 }
 
 void Game::joinGame()
@@ -214,21 +215,37 @@ bool Game::keyPressed(const KeyboardEvent& event)
 	{
 		if (event.keysym.sym == SDLK_RIGHT)
 		{
+			if (cameraNode->getPosition().x + 10 > currentLevel->getMaxBoundary().x)
+			{
+				return true;
+			}
 			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(10, 0, 0));
 			return true;
 		}
 		else if (event.keysym.sym == SDLK_LEFT)
 		{
+			if (cameraNode->getPosition().x - 10 < currentLevel->getMinBoundary().x)
+			{
+				return true;
+			}
 			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(-10, 0, 0));
 			return true;
 		}
 		else if (event.keysym.sym == SDLK_UP)
 		{
+			if (cameraNode->getPosition().z - 10 - 150 < currentLevel->getMinBoundary().z)
+			{
+				return true;
+			}
 			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, -10));
 			return true;
 		}
 		else if (event.keysym.sym == SDLK_DOWN)
 		{
+			if (cameraNode->getPosition().z + 10 - 100 > currentLevel->getMaxBoundary().z)
+			{
+				return true;
+			}
 			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, 10));
 			return true;
 		}
