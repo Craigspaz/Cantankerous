@@ -28,12 +28,12 @@ void Level::loadLevel()
 		{
 			if (line.at(i) == 'g') // grass
 			{
-				Tile* tile = new Tile(Ogre::Vector3(i * scale, 0, row * scale) , sceneManager, GRASS_TILE);
+				Tile* tile = new Tile(Ogre::Vector3(i, 0, row) , sceneManager, GRASS_TILE, scale);
 				tiles->push_back(tile);
 			}
 			else if (line.at(i) == 'd') // dirt
 			{
-				Tile* tile = new Tile(Ogre::Vector3(i * scale, 0, row * scale), sceneManager, DIRT_TILE);
+				Tile* tile = new Tile(Ogre::Vector3(i, 0, row), sceneManager, DIRT_TILE, scale);
 				tiles->push_back(tile);
 			}
 			else if (line.at(i) == '\n' || line.at(i) == '\r\n')

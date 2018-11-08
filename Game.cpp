@@ -9,12 +9,6 @@ Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre contex
 	camera = NULL;
 	client = NULL;
 	server = NULL;
-
-	// Initializes an array of bools to store if a key is down or not
-	for (int i = 0; i < 255; i++)
-	{
-		keys[i] = false;
-	}
 }
 Game::~Game()
 {
@@ -53,12 +47,13 @@ void Game::setup()
 	this->cameraNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 
 	// create the camera
-	this->camera = sceneManager->createCamera("myCam");
-	camera->setNearClipDistance(5); // specific to this sample
+	this->camera = sceneManager->createCamera("camera");
+	camera->setNearClipDistance(5);
 	camera->setAutoAspectRatio(true);
 	camera->lookAt(0, 0, 0);
 	this->cameraNode->attachObject(camera);
-	this->cameraNode->setPosition(0, 150, 222);
+	this->cameraNode->setPosition(0, 200, 100);
+	camera->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(-50)));
 
 	// and tell it to render into the main window
 	getRenderWindow()->addViewport(camera);
@@ -86,7 +81,7 @@ void Game::setup()
 
 	// disable default camera control so the character can do its own
 	// CS_FREELOOK, CS_ORBIT, CS_MANUAL
-	cameraMan->setStyle(OgreBites::CS_FREELOOK);
+	cameraMan->setStyle(OgreBites::CS_MANUAL);
 
 	// use small amount of ambient lighting
 	sceneManager->setAmbientLight(ColourValue(0.3f, 0.3f, 0.3f));
@@ -107,6 +102,13 @@ void Game::setup()
 	//node->attachObject(floor);
 	//node->setPosition(Vector3(0, 0, 0));
 	/// END TMP
+
+	Entity* tmpEntity = sceneManager->createEntity(SceneManager::PrefabType::PT_CUBE);
+	SceneNode* tmpSceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+	tmpSceneNode->setPosition(Ogre::Vector3(0, 10, 0));
+	tmpSceneNode->scale(Ogre::Vector3(1 / 10., 1 / 10., 1 / 10.));
+	tmpSceneNode->attachObject(tmpEntity);
+
 	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
 	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
 	Level testLevel(path + "testLevel.txt",sceneManager);
@@ -193,14 +195,35 @@ bool Game::keyPressed(const KeyboardEvent& event)
 			box->appendText(str);
 		}
 	}
+	else if(gameMode != -1)
+	{
+		if (event.keysym.sym == SDLK_RIGHT)
+		{
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(10, 0, 0));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_LEFT)
+		{
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(-10, 0, 0));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_UP)
+		{
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, -10));
+			return true;
+		}
+		else if (event.keysym.sym == SDLK_DOWN)
+		{
+			cameraNode->setPosition(cameraNode->getPosition() + Ogre::Vector3(0, 0, 10));
+			return true;
+		}
+	}
 
 	//cameraMan->keyPressed(event);
-	keys[event.keysym.sym] = true;
 	return true;
 }
 bool Game::keyReleased(const KeyboardEvent& event)
 {
-	keys[event.keysym.sym] = false;
 	cameraMan->keyPressed(event);
 	return true;
 }

@@ -9,7 +9,7 @@
 class Tile
 {
 public:
-	Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type);
+	Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, int scale);
 	~Tile();
 	Ogre::Vector3 getPosition();
 	void setPosition(Ogre::Vector3);
@@ -21,6 +21,7 @@ private:
 
 	Ogre::Entity* entity;
 	std::string name;
+	int scale;
 };
 
 #endif

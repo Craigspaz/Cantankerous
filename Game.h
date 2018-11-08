@@ -51,9 +51,7 @@ private:
 	OgreBites::AdvancedRenderControls* controls;
 	OgreBites::CameraMan* cameraMan;
 	Ogre::Real deltaTime;
-	
-	bool keys[255];
-	bool mouseButtons[10];
+
 	char gameMode;
 
 	Server* server;
