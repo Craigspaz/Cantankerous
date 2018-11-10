@@ -2,8 +2,9 @@
 #include <fstream>
 #include "SystemDefines.h"
 
-Level::Level(std::string filename, Ogre::SceneManager* manager)
+Level::Level(std::string path, std::string filename, Ogre::SceneManager* manager)
 {
+	this->path = path;
 	this->filename = filename;
 	this->sceneManager = manager;
 	tiles = new std::vector<Tile*>();
@@ -13,9 +14,17 @@ Level::Level(std::string filename, Ogre::SceneManager* manager)
 
 Level::~Level()
 {
-	
+	for (auto tile : *tiles)
+	{
+		delete tile;
+	}
+	delete tiles;
 }
 
+std::string Level::getFileName()
+{
+	return filename;
+}
 
 Ogre::Vector3 Level::getMinBoundary()
 {
@@ -29,7 +38,7 @@ Ogre::Vector3 Level::getMaxBoundary()
 
 void Level::loadLevel()
 {
-	std::ifstream file(filename);
+	std::ifstream file(path + filename);
 	std::string line;
 	int row = 0;
 	int scale = 25;

@@ -9,17 +9,18 @@
 class Level
 {
 public:
-	Level(std::string filename, Ogre::SceneManager* manager);
+	Level(std::string path, std::string filename, Ogre::SceneManager* manager);
 	~Level();
 
 	Ogre::Vector3 getMinBoundary();
 	Ogre::Vector3 getMaxBoundary();
+	std::string getFileName();
 
 private:
 
 	void loadLevel();
 
-
+	std::string path;
 	std::string filename;
 	Ogre::SceneManager* sceneManager;
 	std::vector<Tile*>* tiles;

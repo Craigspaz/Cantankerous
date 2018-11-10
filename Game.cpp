@@ -1,10 +1,16 @@
 #include "Game.h"
+#include "Messages.h"
 
 using namespace Ogre;
 using namespace OgreBites;
 
 Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre context
 {
+	if (Messages::initMessages() != 0)
+	{
+		printf("Unexpected error initializing socket framework...\n");
+		exit(-1);
+	}
 	gameMode = -1;
 	camera = NULL;
 	client = NULL;
@@ -112,16 +118,21 @@ void Game::setup()
 
 	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
 	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
-	currentLevel = new Level(path + "testLevel.txt",sceneManager);
+	currentLevel = new Level(path, "testLevel.txt",sceneManager);
 }
 
 void Game::joinGame()
 {
 	OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
 	std::cout << box->getText() << std::endl;
-	client = new Client("127.0.0.1", 1234);
+	client = new Client(box->getText(), 1234, this, sceneManager);
 	trayManager->destroyAllWidgets();
 	gameMode = 1;
+}
+
+std::string Game::getCurrentLevelFileName()
+{
+	return currentLevel->getFileName();
 }
 
 void Game::buttonHit(Button* button)
@@ -130,8 +141,16 @@ void Game::buttonHit(Button* button)
 	if (button->getName() == "Host")
 	{
 		trayManager->destroyAllWidgets();
-		server = new Server();
-		client = new Client("127.0.0.1", 1234);
+		std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+		path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+		this->setLevel(new Level(path,"testLevel2.txt", sceneManager));
+		//std::thread createServerThread(&Game::createServer, this);
+		//createServerThread.detach();
+		server = new Server(this, sceneManager);
+		clientIP = "127.0.0.1";
+		client = new Client(clientIP, 1234, this, sceneManager);
+		//std::thread createClientThread(&Game::createClient, this);
+		//createClientThread.detach();
 		gameMode = 2;
 	}
 	else if (button->getName() == "Join")
@@ -156,6 +175,17 @@ void Game::buttonHit(Button* button)
 }
 
 
+void Game::createServer()
+{
+	server = new Server(this, sceneManager);
+}
+
+void Game::createClient()
+{
+	client = new Client(clientIP, 1234, this, sceneManager);
+}
+
+
 void Game::update()
 {
 	if (gameMode == 1) // Client
@@ -170,6 +200,13 @@ void Game::update()
 	{
 
 	}
+}
+
+
+void Game::setLevel(Level* level)
+{
+	delete this->currentLevel;
+	this->currentLevel = level;
 }
 	
 bool Game::keyPressed(const KeyboardEvent& event)

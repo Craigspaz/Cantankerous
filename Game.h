@@ -39,10 +39,15 @@ public:
 	virtual void buttonHit(Button* button) override;
 
 	void update();
+
+	void setLevel(Level* level);
+	std::string getCurrentLevelFileName();
 	
 private:
 
 	void joinGame();
+	void createServer();
+	void createClient();
 
 	SceneManager* sceneManager;
 	Ogre::Camera* camera;
@@ -57,6 +62,8 @@ private:
 	Server* server;
 	Client* client;
 	Level* currentLevel;
+
+	std::string clientIP;
 };	
 
 #endif
