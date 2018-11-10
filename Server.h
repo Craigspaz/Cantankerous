@@ -6,11 +6,14 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include "Messages.h"
+
+class Game;
 
 class Server
 {
 public:
-	Server();
+	Server(Game* game, Ogre::SceneManager* sceneManager);
 	~Server();
 
 	void update(); // simulates the game
@@ -25,6 +28,10 @@ private:
 	std::vector<Unit*> units;
 	std::thread* messageRecievingThread;
 	std::mutex unitsLock;
+	SOCKET sock;
+	struct sockaddr_in connection;
+	Game* game;
+	Ogre::SceneManager* sceneManager;
 };
 
 #endif
