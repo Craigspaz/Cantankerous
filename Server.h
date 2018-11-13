@@ -25,9 +25,11 @@ private:
 	void sendMessage(); // helper function
 
 
-	std::vector<Unit*> units;
-	std::thread* messageRecievingThread;
+	std::vector<Unit*>* units;
 	std::mutex unitsLock;
+
+
+	std::thread* messageRecievingThread;
 	SOCKET sock;
 	struct sockaddr_in connection;
 	Game* game;

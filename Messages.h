@@ -19,6 +19,8 @@ namespace Messages
 
 	int receiveMessage(SOCKET sock, char* buffer, const int bufferSize);
 
+	int receiveMessage(SOCKET sock, char* buffer, const int bufferSize, int flags);
+
 	void closeSocket(SOCKET sock);
 
 	void cleanUpMessages();

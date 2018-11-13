@@ -5,17 +5,18 @@
 class Unit
 {
 public:
-	Unit(Ogre::Vector3 position, Ogre::Entity* entity, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber);
+	Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type);
 	~Unit();
 
 	void setPosition(Ogre::Vector3 position);
 	Ogre::Vector3 getPosition();
-	void update();
+	virtual void update();
+	int getType();
 
 	int getPlayerControlledBy();
 	void setPlayerControlledBy(int i);
 
-private:
+protected:
 	Ogre::SceneNode* node;
 	Ogre::SceneManager* manager;
 	int controlledByPlayerNumber;

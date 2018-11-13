@@ -1,11 +1,19 @@
 #include "Server.h"
 #include "Game.h"
+#include "Tank.h"
 
 
 Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 {
 	this->game = game;
 	this->sceneManager = sceneManager;
+
+	//Create test tank
+	units = new std::vector<Unit*>();
+
+	Tank* tank = new Tank(Ogre::Vector3(0,10,0), sceneManager, 1);
+	this->units->push_back(tank);
+
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
 	connection.sin_addr.s_addr = INADDR_ANY;
@@ -22,7 +30,10 @@ Server::~Server()
 
 void Server::update()
 {
-
+	for (auto unit : *units)
+	{
+		unit->update();
+	}
 }
 
 void Server::waitForMessages()

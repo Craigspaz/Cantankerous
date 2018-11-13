@@ -2,11 +2,10 @@
 
 
 
-Unit::Unit(Ogre::Vector3 position, Ogre::Entity* entity, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber)
+Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type)
 {
 	Ogre::SceneNode* sceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 	this->node = sceneNode;
-	this->node->attachObject(entity);
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
 }
@@ -31,6 +30,11 @@ Ogre::Vector3 Unit::getPosition()
 void Unit::update()
 {
 
+}
+
+int Unit::getType()
+{
+	return controlledByPlayerNumber;
 }
 
 
