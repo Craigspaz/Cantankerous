@@ -202,16 +202,17 @@ void Game::update()
 {
 	if (gameMode == 1) // Client
 	{
-
+		client->update(this->cameraNode);
 	}
 	else if (gameMode == 2) // Server
 	{
 		//std::cout << "Updating..." << std::endl;
 		server->update();
+		client->update(this->cameraNode);
 	}
 	else if (gameMode == 0) // getting IP
 	{
-
+		// Do nothing...
 	}
 }
 
@@ -347,8 +348,12 @@ bool Game::mousePressed(const MouseButtonEvent& event)
 	//	mTrayMgr->hideCursor();
 	//}
 
+	if (gameMode == 1 || gameMode == 2)
+	{
+		client->handleClick(event);
+	}
 	//cameraMan->mousePressed(event);
-	trayManager->mousePressed(event);
+	//trayManager->mousePressed(event);
 	return true;
 }
 bool Game::mouseReleased(const MouseButtonEvent& event)
@@ -376,4 +381,9 @@ bool Game::mouseWheelRolled(const MouseWheelEvent& event)
 {
 	//cameraMan->mouseWheelRolled(event);
 	return true;
+}
+
+Level* Game::getCurrentLevel()
+{
+	return currentLevel;
 }

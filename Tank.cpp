@@ -4,7 +4,7 @@
 
 
 
-Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber) : Unit(position,sceneManager,controlledByPlayerNumber, UNIT_TANK)
+Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int id) : Unit(position,sceneManager,controlledByPlayerNumber, UNIT_TANK)
 {
 	Ogre::Entity* tmpEntity = sceneManager->createEntity("treds_Cube.mesh");
 	this->baseNode = this->node->createChildSceneNode();
@@ -21,7 +21,7 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 }
 
 
-void Tank::update()
+void Tank::update(Level* level)
 {
 	this->setPosition(this->getPosition() + Ogre::Vector3(0.5, 0, 0));
 }
@@ -32,4 +32,10 @@ Tank::~Tank()
 	this->manager->getRootSceneNode()->removeAndDestroyChild(this->node);
 	this->manager->destroyEntity(this->base);
 	this->manager->destroyEntity(this->turret);
+}
+
+
+void Tank::attack(Unit* target)
+{
+
 }

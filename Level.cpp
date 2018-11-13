@@ -72,3 +72,9 @@ void Level::loadLevel()
 	}
 	file.close();
 }
+
+
+std::vector<Tile*>* Level::getTiles()
+{
+	return tiles;
+}
