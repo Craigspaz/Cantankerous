@@ -17,21 +17,25 @@ public:
 	~Server();
 
 	void update(); // simulates the game
-
 	void waitForMessages(); // Dedicated to separate thread to recieve input from players
 
 private:
-	void recieveMessage(); // helper function
-	void sendMessage(); // helper function
 
+	void sendUnitToClients(Unit* unit);
+	void addUnit(Unit* unit);
 
-	std::vector<Unit*> units;
-	std::thread* messageRecievingThread;
+	std::vector<SOCKET>* sockets;
+
+	std::vector<Unit*>* units;
 	std::mutex unitsLock;
+
+
+	std::thread* messageRecievingThread;
 	SOCKET sock;
 	struct sockaddr_in connection;
 	Game* game;
 	Ogre::SceneManager* sceneManager;
+
 };
 
 #endif

@@ -1,11 +1,18 @@
 #include "Server.h"
 #include "Game.h"
+#include "Tank.h"
+#include <thread>
+#include <chrono>
 
 
 Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 {
 	this->game = game;
 	this->sceneManager = sceneManager;
+
+	//Create test tank
+	units = new std::vector<Unit*>();
+	sockets = new std::vector<SOCKET>();
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
 	connection.sin_addr.s_addr = INADDR_ANY;
@@ -13,6 +20,10 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	Messages::bindSocket(sock,connection);
 	messageRecievingThread = new std::thread(&Server::waitForMessages,this);
 	messageRecievingThread->detach();
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
+	addUnit(tank);
 }
 
 
@@ -22,7 +33,10 @@ Server::~Server()
 
 void Server::update()
 {
-
+	for (auto unit : *units)
+	{
+		unit->update(game->getCurrentLevel());
+	}
 }
 
 void Server::waitForMessages()
@@ -31,6 +45,7 @@ void Server::waitForMessages()
 	{
 		Messages::listenForConnections(sock);
 		SOCKET newSocket = Messages::acceptConnection(sock);
+		sockets->push_back(newSocket);
 		char buffer[1024];
 		printf("Receiving message from client\n");
 		int bytesReceived = Messages::receiveMessage(newSocket, buffer, 1024);
@@ -57,12 +72,53 @@ void Server::waitForMessages()
 	}
 }
 
-void Server::recieveMessage()
-{
 
+void Server::sendUnitToClients(Unit* unit)
+{
+	printf("Sending unit to clients");
+	char sendBuffer[1024];
+	Ogre::Vector3 facingDirection = unit->getOrientation() * Ogre::Vector3::UNIT_Z;;
+	sendBuffer[0] = 0x01;
+	std::string message = "<ID>" + std::to_string(unit->getUnitID());
+	message += "</ID><Position><X>";
+	message += std::to_string(unit->getPosition().x);
+	message += "</X><Y>";
+	message += std::to_string(unit->getPosition().y);
+	message += "</Y><Z>";
+	message += std::to_string(unit->getPosition().z);
+	message += "</Z></Position><Rotation>";
+	message += std::to_string(Ogre::Degree(-facingDirection.angleBetween(Ogre::Vector3::UNIT_Z)).valueDegrees());
+	message += "</Rotation><Scale><X>";
+	message += std::to_string(unit->getScale().x);
+	message += "</X><Y>";
+	message += std::to_string(unit->getScale().y);
+	message += "</Y><Z>";
+	message += std::to_string(unit->getScale().z);
+	message += "</Z></Scale>";
+	message += "<PlayerID>";
+	message += std::to_string(unit->getPlayerControlledBy());
+	message += "</PlayerID><Type>";
+	message += std::to_string(unit->getType());
+	message += "</Type>";
+
+	short length = message.length();
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
+	printf("Sent unit add message");
 }
 
-void Server::sendMessage()
-{
 
+void Server::addUnit(Unit* unit)
+{
+	this->units->push_back(unit);
+	sendUnitToClients(unit);
 }

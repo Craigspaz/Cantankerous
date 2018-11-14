@@ -42,6 +42,7 @@ public:
 
 	void setLevel(Level* level);
 	std::string getCurrentLevelFileName();
+	Level* getCurrentLevel();
 	
 private:
 

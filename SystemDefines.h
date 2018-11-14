@@ -7,4 +7,6 @@
 #define GRASS_TILE 0
 #define DIRT_TILE 1
 
+#define UNIT_TANK 0
+
 #endif

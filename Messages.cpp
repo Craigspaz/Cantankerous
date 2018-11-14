@@ -62,6 +62,18 @@ int Messages::receiveMessage(SOCKET sock, char* buffer, const int bufferSize)
 	return size;
 }
 
+int Messages::receiveMessage(SOCKET sock, char* buffer, const int bufferSize, int flags)
+{
+	int size = recv(sock, buffer, bufferSize, flags);
+	if (size == SOCKET_ERROR)
+	{
+		printf("ERROR: Failed to receive a message");
+		buffer = NULL;
+		return 0;
+	}
+	return size;
+}
+
 
 void Messages::closeSocket(SOCKET sock)
 {

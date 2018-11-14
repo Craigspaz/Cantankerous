@@ -6,6 +6,7 @@ using namespace OgreBites;
 
 Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre context
 {
+	deltaTime = 0;
 	if (Messages::initMessages() != 0)
 	{
 		printf("Unexpected error initializing socket framework...\n");
@@ -110,11 +111,21 @@ void Game::setup()
 	//node->setPosition(Vector3(0, 0, 0));
 	/// END TMP
 
-	Entity* tmpEntity = sceneManager->createEntity(SceneManager::PrefabType::PT_CUBE);
+	/*Entity* tmpEntity = sceneManager->createEntity("treds_Cube.mesh");
 	SceneNode* tmpSceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 	tmpSceneNode->setPosition(Ogre::Vector3(0, 10, 0));
-	tmpSceneNode->scale(Ogre::Vector3(1 / 10., 1 / 10., 1 / 10.));
+	tmpSceneNode->scale(Ogre::Vector3(3,3,3));
+	//tmpSceneNode->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(-90)));
+	//tmpSceneNode->scale(Ogre::Vector3(1 / 10., 1 / 10., 1 / 10.));
 	tmpSceneNode->attachObject(tmpEntity);
+
+	tmpEntity = sceneManager->createEntity("turret_Cube.001.mesh");
+	tmpSceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+	tmpSceneNode->setPosition(Ogre::Vector3(0, 10, 0));
+	tmpSceneNode->scale(Ogre::Vector3(3, 3, 3));
+	tmpSceneNode->rotate(Ogre::Vector3::UNIT_Y, Ogre::Radian(Ogre::Degree(100)));
+	tmpSceneNode->attachObject(tmpEntity);
+	*/
 
 	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
 	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
@@ -152,6 +163,7 @@ void Game::buttonHit(Button* button)
 		//std::thread createClientThread(&Game::createClient, this);
 		//createClientThread.detach();
 		gameMode = 2;
+		std::cout << "Initialized server and host client" << std::endl;
 	}
 	else if (button->getName() == "Join")
 	{
@@ -190,15 +202,17 @@ void Game::update()
 {
 	if (gameMode == 1) // Client
 	{
-
+		client->update(this->cameraNode);
 	}
 	else if (gameMode == 2) // Server
 	{
-
+		//std::cout << "Updating..." << std::endl;
+		server->update();
+		client->update(this->cameraNode);
 	}
 	else if (gameMode == 0) // getting IP
 	{
-
+		// Do nothing...
 	}
 }
 
@@ -252,7 +266,7 @@ bool Game::keyPressed(const KeyboardEvent& event)
 	{
 		if (event.keysym.sym == SDLK_RIGHT)
 		{
-			if (cameraNode->getPosition().x + 10 > currentLevel->getMaxBoundary().x)
+			if (cameraNode->getPosition().x + 100 > currentLevel->getMaxBoundary().x)
 			{
 				return true;
 			}
@@ -261,7 +275,7 @@ bool Game::keyPressed(const KeyboardEvent& event)
 		}
 		else if (event.keysym.sym == SDLK_LEFT)
 		{
-			if (cameraNode->getPosition().x - 10 < currentLevel->getMinBoundary().x)
+			if (cameraNode->getPosition().x - 100 < currentLevel->getMinBoundary().x)
 			{
 				return true;
 			}
@@ -306,8 +320,9 @@ bool Game::frameRenderingQueued(const Ogre::FrameEvent& event)
 	{
 		//update the game
 		update();
-		--deltaTime;
+		deltaTime = 0;
 	}
+	//std::cout << "event..." << std::endl;
 
 	if (!trayManager->isDialogVisible())
 	{
@@ -333,8 +348,12 @@ bool Game::mousePressed(const MouseButtonEvent& event)
 	//	mTrayMgr->hideCursor();
 	//}
 
+	if (gameMode == 1 || gameMode == 2)
+	{
+		client->handleClick(event);
+	}
 	//cameraMan->mousePressed(event);
-	trayManager->mousePressed(event);
+	//trayManager->mousePressed(event);
 	return true;
 }
 bool Game::mouseReleased(const MouseButtonEvent& event)
@@ -362,4 +381,9 @@ bool Game::mouseWheelRolled(const MouseWheelEvent& event)
 {
 	//cameraMan->mouseWheelRolled(event);
 	return true;
+}
+
+Level* Game::getCurrentLevel()
+{
+	return currentLevel;
 }

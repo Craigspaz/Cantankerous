@@ -16,6 +16,8 @@ public:
 	Ogre::Vector3 getMaxBoundary();
 	std::string getFileName();
 
+	std::vector<Tile*>* getTiles();
+
 private:
 
 	void loadLevel();

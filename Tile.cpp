@@ -10,8 +10,9 @@ std::string getNewName() // return a unique name
 }
 
 
-Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, int scale)
+Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double scale)
 {
+	occupied = false;
 	position.x *= scale;
 	position.z *= scale;
 	this->position = position;
@@ -53,4 +54,21 @@ Ogre::Vector3 Tile::getPosition()
 void Tile::setPosition(Ogre::Vector3 pos)
 {
 	this->position = pos;
+}
+
+
+bool Tile::isOccupied()
+{
+	return occupied;
+}
+
+
+void Tile::setOccupied(bool a)
+{
+	occupied = a;
+}
+
+double Tile::getScale()
+{
+	return scale;
 }

@@ -8,7 +8,8 @@ Level::Level(std::string path, std::string filename, Ogre::SceneManager* manager
 	this->filename = filename;
 	this->sceneManager = manager;
 	tiles = new std::vector<Tile*>();
-
+	minCorner = Ogre::Vector3(0, 0, 0);
+	maxCorner = Ogre::Vector3(0, 0, 0);
 	loadLevel();
 }
 
@@ -70,4 +71,10 @@ void Level::loadLevel()
 		row++;
 	}
 	file.close();
+}
+
+
+std::vector<Tile*>* Level::getTiles()
+{
+	return tiles;
 }
