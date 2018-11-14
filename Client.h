@@ -26,6 +26,17 @@ public:
 	void update(Ogre::SceneNode* cameraNode);
 
 private:
+	struct UnitsToCreateData
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		Ogre::Real rotation;
+		int playerID;
+		int type;
+	};
+
+	std::vector<UnitsToCreateData>* unitsToCreate;
+	std::mutex unitsToCreateLock;
 
 	void processInitialMessage(char* message);
 	void getInitialInfo();

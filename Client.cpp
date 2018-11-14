@@ -6,6 +6,7 @@
 Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager)
 {
 	localCopyOfUnits = new std::vector<Unit*>();
+	unitsToCreate = new std::vector<UnitsToCreateData>();
 	this->sceneManager = sceneManager;
 	this->game = game;
 	sock = Messages::createSocket();
@@ -255,11 +256,21 @@ void Client::receiveMessages()
 			}
 			if (type == UNIT_TANK)
 			{
-				Tank* tank = new Tank(position, sceneManager, playerID, id);
+				UnitsToCreateData data;
+				data.id = id;
+				data.playerID = playerID;
+				data.position = position;
+				data.rotation = rotation;
+				data.type = type;
+
+				unitsToCreateLock.lock();
+				unitsToCreate->push_back(data);
+				unitsToCreateLock.unlock();
+				/*Tank* tank = new Tank(position, sceneManager, playerID, id);
 				tank->setRotation(Ogre::Degree(rotation));
 				unitsLock.lock();
 				localCopyOfUnits->push_back(tank);
-				unitsLock.unlock();
+				unitsLock.unlock();*/
 				printf("Received and processed unit add message\n");
 			}
 		}
@@ -268,6 +279,20 @@ void Client::receiveMessages()
 
 void Client::update(Ogre::SceneNode* cameraNode)
 {
+	unitsToCreateLock.lock();
+	for (auto unit : *unitsToCreate)
+	{
+		if (unit.type == UNIT_TANK)
+		{
+			Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
+			tank->setRotation(Ogre::Degree(unit.rotation));
+			unitsLock.lock();
+			localCopyOfUnits->push_back(tank);
+			unitsLock.unlock();
+		}
+	}
+	unitsToCreateLock.unlock();
+
 	// Ask server for terrain
 	char buffer[1024];
 	buffer[0] = 0x01;
