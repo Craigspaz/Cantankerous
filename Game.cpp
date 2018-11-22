@@ -127,8 +127,9 @@ void Game::setup()
 	tmpSceneNode->attachObject(tmpEntity);
 	*/
 
-	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+	//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	std::string path = "./";
 	currentLevel = new Level(path, "testLevel.txt",sceneManager);
 }
 
@@ -152,8 +153,9 @@ void Game::buttonHit(Button* button)
 	if (button->getName() == "Host")
 	{
 		trayManager->destroyAllWidgets();
-		std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-		path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+		//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+		//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+		std::string path = "./";
 		this->setLevel(new Level(path,"testLevel2.txt", sceneManager));
 		//std::thread createServerThread(&Game::createServer, this);
 		//createServerThread.detach();
