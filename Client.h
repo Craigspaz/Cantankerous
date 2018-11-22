@@ -35,6 +35,15 @@ private:
 		int type;
 	};
 
+	struct UnitsToUpdate
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		Ogre::Real rotation;
+		int playerID;
+		int type;
+	};
+
 	std::vector<UnitsToCreateData>* unitsToCreate;
 	std::mutex unitsToCreateLock;
 
@@ -50,6 +59,9 @@ private:
 
 	std::vector<Unit*>* localCopyOfUnits;
 	std::mutex unitsLock;
+
+	std::mutex unitsToUpdateLock;
+	std::vector<UnitsToUpdate>* unitsToUpdate;
 
 };
 
