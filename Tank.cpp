@@ -39,3 +39,14 @@ void Tank::attack(Unit* target)
 {
 
 }
+
+
+Ogre::Entity* Tank::getTurretEntity()
+{
+	return turret;
+}
+
+Ogre::Entity* Tank::getBaseEntity()
+{
+	return base;
+}

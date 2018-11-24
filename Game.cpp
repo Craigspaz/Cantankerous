@@ -62,6 +62,7 @@ void Game::setup()
 	this->cameraNode->attachObject(camera);
 	this->cameraNode->setPosition(0, 200, 100);
 	camera->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(-50)));
+	directionFacing = cameraNode->getPosition().normalisedCopy();
 
 	// and tell it to render into the main window
 	getRenderWindow()->addViewport(camera);
@@ -204,13 +205,13 @@ void Game::update()
 {
 	if (gameMode == 1) // Client
 	{
-		client->update(this->cameraNode);
+		client->update(this->cameraNode, CLIENT_MODE_PASSIVE);
 	}
 	else if (gameMode == 2) // Server
 	{
 		//std::cout << "Updating..." << std::endl;
 		server->update();
-		client->update(this->cameraNode);
+		client->update(this->cameraNode, CLIENT_MODE_PASSIVE);
 	}
 	else if (gameMode == 0) // getting IP
 	{
@@ -352,7 +353,9 @@ bool Game::mousePressed(const MouseButtonEvent& event)
 
 	if (gameMode == 1 || gameMode == 2)
 	{
-		client->handleClick(event);
+		Ogre::Ray ray = trayManager->getCursorRay(camera);
+		client->handleClick(camera, camera->getPosition(), event, directionFacing);
+		//client->handleClick(cameraMan->getCamera()->getPosition(), event, directionFacing);
 	}
 	//cameraMan->mousePressed(event);
 	//trayManager->mousePressed(event);

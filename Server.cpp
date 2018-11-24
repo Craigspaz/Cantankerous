@@ -31,12 +31,14 @@ Server::~Server()
 {
 }
 
+
 void Server::update()
 {
 	for (auto unit : *units)
 	{
-		unit->setPosition(unit->getPosition() + Ogre::Vector3(0.5, 0, 0));
+		unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
 		unit->update(game->getCurrentLevel());
+		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
 		setUpdateAboutUnit(unit);
 	}
 }
@@ -64,7 +66,7 @@ void Server::waitForMessages()
 			char* tmpSendBuffer = sendBuffer + 3;
 			std::string filename = "<Level>" + game->getCurrentLevelFileName() + "</Level>";
 			strncpy(tmpSendBuffer, filename.c_str(), 255);
-			printf("Sending message to client\n");
+			//printf("Sending message to client\n");
 			int bytesSent = Messages::sendMessage(newSocket, sendBuffer, 1024);
 			if (bytesSent == 0)
 			{
@@ -77,7 +79,7 @@ void Server::waitForMessages()
 
 void Server::setUpdateAboutUnit(Unit* unit)
 {
-	printf("Sending unit update to clients");
+	//printf("Sending unit update to clients");
 	char sendBuffer[1024];
 	Ogre::Vector3 facingDirection = unit->getOrientation() * Ogre::Vector3::UNIT_Z;;
 	sendBuffer[0] = 0x02;
@@ -115,13 +117,13 @@ void Server::setUpdateAboutUnit(Unit* unit)
 	{
 		Messages::sendMessage(s, sendBuffer, length + 3);
 	}
-	printf("Sent unit update message");
+	//printf("Sent unit update message");
 }
 
 
 void Server::sendUnitToClients(Unit* unit)
 {
-	printf("Sending unit to clients");
+	//printf("Sending unit to clients");
 	char sendBuffer[1024];
 	Ogre::Vector3 facingDirection = unit->getOrientation() * Ogre::Vector3::UNIT_Z;;
 	sendBuffer[0] = 0x01;
@@ -159,7 +161,7 @@ void Server::sendUnitToClients(Unit* unit)
 	{
 		Messages::sendMessage(s, sendBuffer, length + 3);
 	}
-	printf("Sent unit add message");
+	//printf("Sent unit add message");
 }
 
 

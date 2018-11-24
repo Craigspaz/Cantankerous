@@ -30,7 +30,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	{
 		printf("Failed to send message!");
 	}
-	printf("Sent message to server for basic info\n");
+	//printf("Sent message to server for basic info\n");
 
 	//messageRecievingThread = new std::thread(&Client::getInitialInfo, this);
 	//messageRecievingThread->detach();
@@ -104,13 +104,118 @@ Client::~Client()
 
 }
 
-void Client::handleClick(const OgreBites::MouseButtonEvent& event)
+Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
+{
+	//TMP local test
+	for (auto unit : *localCopyOfUnits)
+	{
+		if (unit->getType() == UNIT_TANK)
+		{
+			Tank* tank = (Tank*)unit;
+			std::pair<bool, Ogre::Real> col = ray.intersects(tank->getBaseEntity()->getBoundingBox());
+			if (col.first)
+			{
+				return unit;
+			}
+			std::pair<bool, Ogre::Real> col2 = ray.intersects(tank->getTurretEntity()->getBoundingBox());
+			if (col2.first)
+			{
+				return unit;
+			}
+		}
+	}
+	return NULL;
+}
+
+void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites::MouseButtonEvent event, Ogre::Vector3 direction)
 {
 	if (event.type == MOUSEBUTTONDOWN)
 	{
 		if (event.button == BUTTON_LEFT)
 		{
 			printf("Left click\n");
+			// Get world position of click
+			//std::cout << "Clicked at : " << (Ogre::Vector2(cameraPosition.x, cameraPosition.z) + Ogre::Vector2(event.x, event.y)) << " " << (Ogre::Vector2(cameraPosition.x, cameraPosition.y)) << " " << Ogre::Vector2(event.x, event.y) << std::endl;
+
+			int width = game->getRenderWindow()->getWidth();
+			int height = game->getRenderWindow()->getHeight();
+			int nX = event.x - (width / 2);
+			int nY = -1.0 * (event.y - (height / 2));
+			Ogre::Ray r = game->getRenderWindow()->getViewport(0)->getCamera()->getCameraToViewportRay(nX, nY);
+			std::cout << "Ray start: " << r.getOrigin() << std::endl;
+			//std::cout << "Start Position : " << cameraPosition + Ogre::Vector3(nX, nY * cos(40.0 * 3.14 / 180.0), 0) << std::endl;
+			//Ogre::Ray mouseRay(cameraPosition + Ogre::Vector3(0, nY * cos(40.0 * 3.14 / 180.0), 0), direction);
+			
+			double x = event.x / (double)game->getRenderWindow()->getWidth();
+			double y = event.y / (double)game->getRenderWindow()->getHeight();
+			Ray ray = camera->getCameraToViewportRay(x, y);
+			SceneNode* testNode = this->sceneManager->getRootSceneNode()->createChildSceneNode();
+			testNode->setPosition((camera->getDerivedPosition() + ray.getDirection() * 225.0) + Ogre::Vector3(x, 0, y));
+			testNode->setScale(testNode->getScale() / 10.0);
+			testNode->setScale(testNode->getScale().x, testNode->getScale().y, 10.0);
+			//testNode->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(direction.angleBetween(Ogre::Vector3::UNIT_Z)) + Ogre::Degree(50)));
+			testNode->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(ray.getDirection()));
+			Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
+			testNode->attachObject(entity);
+
+
+
+			/*Ray testRay(testNode->getPosition(), direction);
+						
+			Unit* unit = checkIfRayIntersectsWithUnits(testRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
+			/*int width = game->getRenderWindow()->getWidth();
+			int height = game->getRenderWindow()->getHeight();
+			std::cout << "Width: " << width << " Height: " << height << std::endl;
+
+			int nX = event.x - (width / 2);
+			int nY = event.y - (height / 2);
+			Ogre::Vector3 rayStart = Ogre::Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+			int distanceFromCenterOfCameraY = height - event.y;
+			if (event.y > height / 2)
+			{
+				distanceFromCenterOfCameraY *= -1;
+			}
+
+			double distanceFromClick = abs(sqrt(pow((height / 2 + distanceFromCenterOfCameraY),2) + pow((height / 2 + distanceFromCenterOfCameraY) * sin(40.0 * 3.14 / 180.0), 2)));
+			//double distanceFromClickZ = 100.0 * tan(40.0 * 3.14 / 180.0);
+			rayStart.x = rayStart.x / (200.0 / cos(40.0 * 3.14 / 180.0));
+			rayStart.z = rayStart.z - distanceFromClick;
+			std::cout << "Clicked at: " << rayStart << " " << direction << std::endl;
+
+			//Ogre::Vector3 vectorFrom = Ogre::Vector3(event.x, 0, event.y) - cameraPosition;
+			Ogre::Ray ray(rayStart, direction);
+			//Ogre::Vector3 pos = ray.getPoint((rayStart - Ogre::Vector3(cameraPosition.x, cameraPosition.y - 200, cameraPosition.z - 100)).length());
+			//std::cout << "Intersects at: " << pos << std::endl;
+			Unit* unit = checkIfRayIntersectsWithUnits(ray);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
 		}
 	}
 }
@@ -130,7 +235,7 @@ void Client::receiveMessages()
 			buffer[bytesReceived] = '\0';
 			printf("Receiving unit add message\n");
 			char* tmpStart = buffer + 3;
-			std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 			bool inID = false;
 			bool inPosition = false;
 			bool inPositionX = false;
@@ -339,9 +444,9 @@ void Client::receiveMessages()
 		else if (buffer[0] == 0x02) // Unit added message
 		{
 		buffer[bytesReceived] = '\0';
-		printf("Receiving unit add message\n");
+		//printf("Receiving unit update message\n");
 		char* tmpStart = buffer + 3;
-		std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+		//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 		bool inID = false;
 		bool inPosition = false;
 		bool inPositionX = false;
@@ -544,13 +649,13 @@ void Client::receiveMessages()
 			unitsLock.lock();
 			localCopyOfUnits->push_back(tank);
 			unitsLock.unlock();*/
-			printf("Received and processed unit add message\n");
+			//printf("Received and processed unit update message\n");
 		}
 		}
 	}
 }
 
-void Client::update(Ogre::SceneNode* cameraNode)
+void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 {
 	unitsToCreateLock.lock();
 	for (auto unit : *unitsToCreate)
@@ -582,12 +687,16 @@ void Client::update(Ogre::SceneNode* cameraNode)
 	}
 	unitsToUpdateLock.unlock();
 
-	unitsLock.lock();
-	for (auto unit : *localCopyOfUnits)
+	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{
-		unit->update(game->getCurrentLevel());
+		unitsLock.lock();
+		for (auto unit : *localCopyOfUnits)
+		{
+			//std::cout << "Unit: " << unit->getUnitID() << " is at: " << unit->getPosition() << std::endl;
+			//unit->update(game->getCurrentLevel());
+		}
+		unitsLock.unlock();
 	}
-	unitsLock.unlock();
 	//unitsToCreateLock.unlock();
 
 	// Ask server for terrain
