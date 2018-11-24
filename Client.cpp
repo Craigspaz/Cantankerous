@@ -784,6 +784,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	unitsToUpdateLock.lock();
 	for (auto unit : *unitsToUpdate)
 	{
+		bool foundUnitToUpdate = false;
 		unitsLock.lock();
 		for (auto realUnit : *localCopyOfUnits)
 		{
@@ -792,6 +793,17 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 				realUnit->setPosition(unit.position);
 				realUnit->setPlayerControlledBy(unit.playerID);
 				realUnit->setRotation(Ogre::Degree(unit.rotation));
+				foundUnitToUpdate = true;
+				break;
+			}
+		}
+		if (foundUnitToUpdate == false)
+		{
+			if (unit.type == UNIT_TANK)
+			{
+				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
+				tank->setRotation(Ogre::Degree(unit.rotation));
+				localCopyOfUnits->push_back(tank);
 			}
 		}
 		unitsLock.unlock();
