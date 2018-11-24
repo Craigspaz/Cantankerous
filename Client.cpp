@@ -151,15 +151,34 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 			Ray ray = camera->getCameraToViewportRay(x, y);
 			SceneNode* testNode = this->sceneManager->getRootSceneNode()->createChildSceneNode();
 			testNode->setPosition((camera->getDerivedPosition() + ray.getDirection() * 225.0) + Ogre::Vector3(x, 0, y));
-			testNode->setScale(testNode->getScale() / 10.0);
-			testNode->setScale(testNode->getScale().x, testNode->getScale().y, 10.0);
+			testNode->setScale(testNode->getScale() / 50.0);
+			testNode->setScale(testNode->getScale().x, testNode->getScale().y, 20.0);
+			testNode->setPosition(testNode->getPosition() + 50.0 * ray.getDirection());
 			//testNode->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(direction.angleBetween(Ogre::Vector3::UNIT_Z)) + Ogre::Degree(50)));
 			testNode->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(ray.getDirection()));
 			Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
 			testNode->attachObject(entity);
+			testNode->showBoundingBox(true);
 
-
-
+			unitsLock.lock();
+			for (auto unit : *localCopyOfUnits)
+			{
+				if (unit->getUnitID() == UNIT_TANK)
+				{
+					Tank* tank = (Tank*)unit;
+					if (entity->getBoundingBox().intersects(tank->getTurretEntity()->getBoundingBox()) || entity->getBoundingBox().intersects(tank->getBaseEntity()->getBoundingBox()))
+					{
+						std::cout << "SELECTED: Found unit colliding...." << std::endl;
+					}
+					else
+					{
+						std::cout << "Click did not collide with unit" << std::endl;
+					}
+				}
+			}
+			unitsLock.unlock();
+			std::cout << "Finished checking for collision" << std::endl;
+			
 			/*Ray testRay(testNode->getPosition(), direction);
 						
 			Unit* unit = checkIfRayIntersectsWithUnits(testRay);

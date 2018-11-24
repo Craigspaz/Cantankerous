@@ -18,6 +18,10 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->turretNode->rotate(Ogre::Vector3::UNIT_Y, Ogre::Radian(Ogre::Degree(100)));
 	this->turretNode->attachObject(tmpEntity);
 	this->turret = tmpEntity;
+	
+
+	this->turretNode->showBoundingBox(true);
+	this->baseNode->showBoundingBox(true);
 }
 
 
