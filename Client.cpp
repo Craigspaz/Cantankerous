@@ -107,6 +107,7 @@ Client::~Client()
 Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
 {
 	//TMP local test
+	unitsLock.lock();
 	for (auto unit : *localCopyOfUnits)
 	{
 		if (unit->getType() == UNIT_TANK)
@@ -115,15 +116,18 @@ Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
 			std::pair<bool, Ogre::Real> col = ray.intersects(tank->getBaseEntity()->getBoundingBox());
 			if (col.first)
 			{
+				unitsLock.unlock();
 				return unit;
 			}
 			std::pair<bool, Ogre::Real> col2 = ray.intersects(tank->getTurretEntity()->getBoundingBox());
 			if (col2.first)
 			{
+				unitsLock.unlock();
 				return unit;
 			}
 		}
 	}
+	unitsLock.unlock();
 	return NULL;
 }
 
@@ -141,26 +145,112 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 			int height = game->getRenderWindow()->getHeight();
 			int nX = event.x - (width / 2);
 			int nY = -1.0 * (event.y - (height / 2));
-			Ogre::Ray r = game->getRenderWindow()->getViewport(0)->getCamera()->getCameraToViewportRay(nX, nY);
-			std::cout << "Ray start: " << r.getOrigin() << std::endl;
+			//Ogre::Ray r = game->getRenderWindow()->getViewport(0)->getCamera()->getCameraToViewportRay(nX, nY);
+			//std::cout << "Ray start: " << r.getOrigin() << std::endl;
 			//std::cout << "Start Position : " << cameraPosition + Ogre::Vector3(nX, nY * cos(40.0 * 3.14 / 180.0), 0) << std::endl;
 			//Ogre::Ray mouseRay(cameraPosition + Ogre::Vector3(0, nY * cos(40.0 * 3.14 / 180.0), 0), direction);
 			
 			double x = event.x / (double)game->getRenderWindow()->getWidth();
 			double y = event.y / (double)game->getRenderWindow()->getHeight();
 			Ray ray = camera->getCameraToViewportRay(x, y);
-			SceneNode* testNode = this->sceneManager->getRootSceneNode()->createChildSceneNode();
-			testNode->setPosition((camera->getDerivedPosition() + ray.getDirection() * 225.0) + Ogre::Vector3(x, 0, y));
-			testNode->setScale(testNode->getScale() / 50.0);
-			testNode->setScale(testNode->getScale().x, testNode->getScale().y, 20.0);
-			testNode->setPosition(testNode->getPosition() + 50.0 * ray.getDirection());
-			//testNode->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(direction.angleBetween(Ogre::Vector3::UNIT_Z)) + Ogre::Degree(50)));
-			testNode->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(ray.getDirection()));
-			Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
-			testNode->attachObject(entity);
-			testNode->showBoundingBox(true);
 
-			unitsLock.lock();
+			Ogre::RaySceneQuery* query = this->sceneManager->createRayQuery(Ogre::Ray());
+			if (query == NULL)
+			{
+				exit(-1);
+			}
+
+			query->setSortByDistance(true); 
+			Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 100.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			query->setRay(theRay);
+			Ogre::RaySceneQueryResult& result = query->execute();
+			for (Ogre::RaySceneQueryResult::iterator i = result.begin(); i != result.end(); i++)
+			{
+				if ((*i).distance > 2.0f)
+				{
+					std::cout << "Found collision" << std::endl;
+					Ogre::Entity* res = (Ogre::Entity*)((*i).movable);
+					unitsLock.lock();
+					for (auto unit : *localCopyOfUnits)
+					{
+						if (unit->getType() == UNIT_TANK)
+						{
+							Tank* tank = (Tank*)unit;
+							if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
+							{
+								std::cout << "Clicked on tank" << std::endl;
+								unitsLock.unlock();
+								return;
+							}
+						}
+					}
+					unitsLock.unlock();
+				}
+			}
+
+
+			/*Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 100.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			Unit* unit = checkIfRayIntersectsWithUnits(theRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
+
+
+			/*SceneNode* testNode = this->sceneManager->getRootSceneNode()->createChildSceneNode();
+			testNode->setPosition((camera->getDerivedPosition() + ray.getDirection() * 300.0) + Ogre::Vector3(x, 0, y));
+			Ogre::Vector3 originalPosition = testNode->getPosition();
+			double dy = 50.0 - originalPosition.y;
+			Ogre::Radian angleBetweenRayAndZAxis = Ogre::Vector3::UNIT_Z.angleBetween(ray.getDirection());
+			if (testNode->getPosition().y != 50.0)
+			{
+				testNode->setPosition(Ogre::Vector3(testNode->getPosition().x, 50.0, testNode->getPosition().z));
+			}
+			double diffZ = dy / tan(angleBetweenRayAndZAxis.valueAngleUnits());
+			testNode->setPosition(Ogre::Vector3(testNode->getPosition().x, testNode->getPosition().y, testNode->getPosition().z - diffZ));
+			testNode->setScale(testNode->getScale() / 10);
+			//testNode->setScale(testNode->getScale().x, testNode->getScale().y, 20.0);
+			testNode->setPosition(testNode->getPosition() + 50.0 * ray.getDirection());
+			testNode->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(ray.getDirection()));
+			Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_SPHERE);
+			testNode->attachObject(entity);
+			testNode->showBoundingBox(true);*/
+
+			/*Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 3.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			Ogre::SceneNode* test2Node = this->sceneManager->getRootSceneNode()->createChildSceneNode();
+			test2Node->setPosition(theRay.getPoint(10));
+			Ogre::Entity* testEntity = this->sceneManager->createEntity(Ogre::SceneManager::PT_SPHERE);
+			test2Node->attachObject(testEntity);
+			test2Node->setScale(test2Node->getScale() / 100.0);
+
+			Unit* unit = checkIfRayIntersectsWithUnits(theRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}
+			*/
+
+			/*unitsLock.lock();
 			for (auto unit : *localCopyOfUnits)
 			{
 				if (unit->getUnitID() == UNIT_TANK)
@@ -176,7 +266,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 					}
 				}
 			}
-			unitsLock.unlock();
+			unitsLock.unlock();*/
 			std::cout << "Finished checking for collision" << std::endl;
 			
 			/*Ray testRay(testNode->getPosition(), direction);
@@ -243,8 +333,8 @@ void Client::receiveMessages()
 {
 	while (true)
 	{
-		char buffer[1024];
-		int bytesReceived = Messages::receiveMessage(sock, buffer, 1024);
+		char buffer[4097];
+		int bytesReceived = Messages::receiveMessage(sock, buffer, 4096);
 		if (bytesReceived == 0)
 		{
 			return;
@@ -694,6 +784,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	unitsToUpdateLock.lock();
 	for (auto unit : *unitsToUpdate)
 	{
+		unitsLock.lock();
 		for (auto realUnit : *localCopyOfUnits)
 		{
 			if (realUnit->getUnitID() == unit.id)
@@ -703,6 +794,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 				realUnit->setRotation(Ogre::Degree(unit.rotation));
 			}
 		}
+		unitsLock.unlock();
 	}
 	unitsToUpdateLock.unlock();
 
