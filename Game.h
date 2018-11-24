@@ -65,6 +65,7 @@ private:
 	Level* currentLevel;
 
 	std::string clientIP;
+	Ogre::Vector3 directionFacing;
 };	
 
 #endif

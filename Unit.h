@@ -38,6 +38,7 @@ protected:
 	Ogre::SceneNode* node;
 	Ogre::SceneManager* manager;
 	int controlledByPlayerNumber;
+	int type;
 };
 
 #endif

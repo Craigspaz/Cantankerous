@@ -13,6 +13,9 @@ public:
 	void attack(Unit* target);
 	//void attack(Building* building); // may need to change
 
+	Ogre::Entity* getTurretEntity();
+	Ogre::Entity* getBaseEntity();
+
 private:
 	Ogre::SceneNode* turretNode;
 	Ogre::SceneNode* baseNode;

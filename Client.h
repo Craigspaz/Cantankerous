@@ -22,11 +22,21 @@ class Client
 public:
 	Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager);
 	~Client();
-	void handleClick(const OgreBites::MouseButtonEvent& event);
-	void update(Ogre::SceneNode* cameraNode);
+	void handleClick(Ogre::Camera* camera, Ogre::Vector3 cameraPosition, OgreBites::MouseButtonEvent event, Ogre::Vector3 direction);
+	void update(Ogre::SceneNode* cameraNode, int clientMode);
+	Unit* checkIfRayIntersectsWithUnits(Ogre::Ray);
 
 private:
 	struct UnitsToCreateData
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		Ogre::Real rotation;
+		int playerID;
+		int type;
+	};
+
+	struct UnitsToUpdate
 	{
 		int id = -1;
 		Ogre::Vector3 position;
@@ -50,6 +60,9 @@ private:
 
 	std::vector<Unit*>* localCopyOfUnits;
 	std::mutex unitsLock;
+
+	std::mutex unitsToUpdateLock;
+	std::vector<UnitsToUpdate>* unitsToUpdate;
 
 };
 

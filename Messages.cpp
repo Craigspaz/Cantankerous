@@ -45,7 +45,7 @@ int Messages::sendMessage(SOCKET socket, char* message, const int length)
 		printf("ERROR: Failed to send message\n");
 		return 0;
 	}
-	printf("Sent Data\n");
+	//printf("Sent Data\n");
 	return bytesSend;
 }
 

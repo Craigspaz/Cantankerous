@@ -62,6 +62,7 @@ void Game::setup()
 	this->cameraNode->attachObject(camera);
 	this->cameraNode->setPosition(0, 200, 100);
 	camera->rotate(Ogre::Vector3::UNIT_X, Ogre::Radian(Ogre::Degree(-50)));
+	directionFacing = cameraNode->getPosition().normalisedCopy();
 
 	// and tell it to render into the main window
 	getRenderWindow()->addViewport(camera);
@@ -127,8 +128,9 @@ void Game::setup()
 	tmpSceneNode->attachObject(tmpEntity);
 	*/
 
-	std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-	path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+	//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+	std::string path = "./";
 	currentLevel = new Level(path, "testLevel.txt",sceneManager);
 }
 
@@ -152,8 +154,9 @@ void Game::buttonHit(Button* button)
 	if (button->getName() == "Host")
 	{
 		trayManager->destroyAllWidgets();
-		std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-		path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+		//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+		//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+		std::string path = "./";
 		this->setLevel(new Level(path,"testLevel2.txt", sceneManager));
 		//std::thread createServerThread(&Game::createServer, this);
 		//createServerThread.detach();
@@ -202,13 +205,13 @@ void Game::update()
 {
 	if (gameMode == 1) // Client
 	{
-		client->update(this->cameraNode);
+		client->update(this->cameraNode, CLIENT_MODE_PASSIVE);
 	}
 	else if (gameMode == 2) // Server
 	{
 		//std::cout << "Updating..." << std::endl;
 		server->update();
-		client->update(this->cameraNode);
+		client->update(this->cameraNode, CLIENT_MODE_PASSIVE);
 	}
 	else if (gameMode == 0) // getting IP
 	{
@@ -350,7 +353,9 @@ bool Game::mousePressed(const MouseButtonEvent& event)
 
 	if (gameMode == 1 || gameMode == 2)
 	{
-		client->handleClick(event);
+		Ogre::Ray ray = trayManager->getCursorRay(camera);
+		client->handleClick(camera, camera->getPosition(), event, directionFacing);
+		//client->handleClick(cameraMan->getCamera()->getPosition(), event, directionFacing);
 	}
 	//cameraMan->mousePressed(event);
 	//trayManager->mousePressed(event);

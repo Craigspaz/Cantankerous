@@ -7,6 +7,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 {
 	localCopyOfUnits = new std::vector<Unit*>();
 	unitsToCreate = new std::vector<UnitsToCreateData>();
+	unitsToUpdate = new std::vector<UnitsToUpdate>();
 	this->sceneManager = sceneManager;
 	this->game = game;
 	sock = Messages::createSocket();
@@ -29,7 +30,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	{
 		printf("Failed to send message!");
 	}
-	printf("Sent message to server for basic info\n");
+	//printf("Sent message to server for basic info\n");
 
 	//messageRecievingThread = new std::thread(&Client::getInitialInfo, this);
 	//messageRecievingThread->detach();
@@ -103,13 +104,227 @@ Client::~Client()
 
 }
 
-void Client::handleClick(const OgreBites::MouseButtonEvent& event)
+Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
+{
+	//TMP local test
+	unitsLock.lock();
+	for (auto unit : *localCopyOfUnits)
+	{
+		if (unit->getType() == UNIT_TANK)
+		{
+			Tank* tank = (Tank*)unit;
+			std::pair<bool, Ogre::Real> col = ray.intersects(tank->getBaseEntity()->getBoundingBox());
+			if (col.first)
+			{
+				unitsLock.unlock();
+				return unit;
+			}
+			std::pair<bool, Ogre::Real> col2 = ray.intersects(tank->getTurretEntity()->getBoundingBox());
+			if (col2.first)
+			{
+				unitsLock.unlock();
+				return unit;
+			}
+		}
+	}
+	unitsLock.unlock();
+	return NULL;
+}
+
+void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites::MouseButtonEvent event, Ogre::Vector3 direction)
 {
 	if (event.type == MOUSEBUTTONDOWN)
 	{
 		if (event.button == BUTTON_LEFT)
 		{
 			printf("Left click\n");
+			// Get world position of click
+			//std::cout << "Clicked at : " << (Ogre::Vector2(cameraPosition.x, cameraPosition.z) + Ogre::Vector2(event.x, event.y)) << " " << (Ogre::Vector2(cameraPosition.x, cameraPosition.y)) << " " << Ogre::Vector2(event.x, event.y) << std::endl;
+
+			int width = game->getRenderWindow()->getWidth();
+			int height = game->getRenderWindow()->getHeight();
+			int nX = event.x - (width / 2);
+			int nY = -1.0 * (event.y - (height / 2));
+			//Ogre::Ray r = game->getRenderWindow()->getViewport(0)->getCamera()->getCameraToViewportRay(nX, nY);
+			//std::cout << "Ray start: " << r.getOrigin() << std::endl;
+			//std::cout << "Start Position : " << cameraPosition + Ogre::Vector3(nX, nY * cos(40.0 * 3.14 / 180.0), 0) << std::endl;
+			//Ogre::Ray mouseRay(cameraPosition + Ogre::Vector3(0, nY * cos(40.0 * 3.14 / 180.0), 0), direction);
+			
+			double x = event.x / (double)game->getRenderWindow()->getWidth();
+			double y = event.y / (double)game->getRenderWindow()->getHeight();
+			Ray ray = camera->getCameraToViewportRay(x, y);
+
+			Ogre::RaySceneQuery* query = this->sceneManager->createRayQuery(Ogre::Ray());
+			if (query == NULL)
+			{
+				exit(-1);
+			}
+
+			query->setSortByDistance(true); 
+			Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 100.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			query->setRay(theRay);
+			Ogre::RaySceneQueryResult& result = query->execute();
+			for (Ogre::RaySceneQueryResult::iterator i = result.begin(); i != result.end(); i++)
+			{
+				if ((*i).distance > 2.0f)
+				{
+					std::cout << "Found collision" << std::endl;
+					Ogre::Entity* res = (Ogre::Entity*)((*i).movable);
+					unitsLock.lock();
+					for (auto unit : *localCopyOfUnits)
+					{
+						if (unit->getType() == UNIT_TANK)
+						{
+							Tank* tank = (Tank*)unit;
+							if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
+							{
+								std::cout << "Clicked on tank" << std::endl;
+								unitsLock.unlock();
+								return;
+							}
+						}
+					}
+					unitsLock.unlock();
+				}
+			}
+
+
+			/*Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 100.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			Unit* unit = checkIfRayIntersectsWithUnits(theRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
+
+
+			/*SceneNode* testNode = this->sceneManager->getRootSceneNode()->createChildSceneNode();
+			testNode->setPosition((camera->getDerivedPosition() + ray.getDirection() * 300.0) + Ogre::Vector3(x, 0, y));
+			Ogre::Vector3 originalPosition = testNode->getPosition();
+			double dy = 50.0 - originalPosition.y;
+			Ogre::Radian angleBetweenRayAndZAxis = Ogre::Vector3::UNIT_Z.angleBetween(ray.getDirection());
+			if (testNode->getPosition().y != 50.0)
+			{
+				testNode->setPosition(Ogre::Vector3(testNode->getPosition().x, 50.0, testNode->getPosition().z));
+			}
+			double diffZ = dy / tan(angleBetweenRayAndZAxis.valueAngleUnits());
+			testNode->setPosition(Ogre::Vector3(testNode->getPosition().x, testNode->getPosition().y, testNode->getPosition().z - diffZ));
+			testNode->setScale(testNode->getScale() / 10);
+			//testNode->setScale(testNode->getScale().x, testNode->getScale().y, 20.0);
+			testNode->setPosition(testNode->getPosition() + 50.0 * ray.getDirection());
+			testNode->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(ray.getDirection()));
+			Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_SPHERE);
+			testNode->attachObject(entity);
+			testNode->showBoundingBox(true);*/
+
+			/*Ogre::Ray theRay((camera->getDerivedPosition() + ray.getDirection() * 3.0) + Ogre::Vector3(x, 0, y), ray.getDirection());
+			Ogre::SceneNode* test2Node = this->sceneManager->getRootSceneNode()->createChildSceneNode();
+			test2Node->setPosition(theRay.getPoint(10));
+			Ogre::Entity* testEntity = this->sceneManager->createEntity(Ogre::SceneManager::PT_SPHERE);
+			test2Node->attachObject(testEntity);
+			test2Node->setScale(test2Node->getScale() / 100.0);
+
+			Unit* unit = checkIfRayIntersectsWithUnits(theRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}
+			*/
+
+			/*unitsLock.lock();
+			for (auto unit : *localCopyOfUnits)
+			{
+				if (unit->getUnitID() == UNIT_TANK)
+				{
+					Tank* tank = (Tank*)unit;
+					if (entity->getBoundingBox().intersects(tank->getTurretEntity()->getBoundingBox()) || entity->getBoundingBox().intersects(tank->getBaseEntity()->getBoundingBox()))
+					{
+						std::cout << "SELECTED: Found unit colliding...." << std::endl;
+					}
+					else
+					{
+						std::cout << "Click did not collide with unit" << std::endl;
+					}
+				}
+			}
+			unitsLock.unlock();*/
+			std::cout << "Finished checking for collision" << std::endl;
+			
+			/*Ray testRay(testNode->getPosition(), direction);
+						
+			Unit* unit = checkIfRayIntersectsWithUnits(testRay);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
+			/*int width = game->getRenderWindow()->getWidth();
+			int height = game->getRenderWindow()->getHeight();
+			std::cout << "Width: " << width << " Height: " << height << std::endl;
+
+			int nX = event.x - (width / 2);
+			int nY = event.y - (height / 2);
+			Ogre::Vector3 rayStart = Ogre::Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+			int distanceFromCenterOfCameraY = height - event.y;
+			if (event.y > height / 2)
+			{
+				distanceFromCenterOfCameraY *= -1;
+			}
+
+			double distanceFromClick = abs(sqrt(pow((height / 2 + distanceFromCenterOfCameraY),2) + pow((height / 2 + distanceFromCenterOfCameraY) * sin(40.0 * 3.14 / 180.0), 2)));
+			//double distanceFromClickZ = 100.0 * tan(40.0 * 3.14 / 180.0);
+			rayStart.x = rayStart.x / (200.0 / cos(40.0 * 3.14 / 180.0));
+			rayStart.z = rayStart.z - distanceFromClick;
+			std::cout << "Clicked at: " << rayStart << " " << direction << std::endl;
+
+			//Ogre::Vector3 vectorFrom = Ogre::Vector3(event.x, 0, event.y) - cameraPosition;
+			Ogre::Ray ray(rayStart, direction);
+			//Ogre::Vector3 pos = ray.getPoint((rayStart - Ogre::Vector3(cameraPosition.x, cameraPosition.y - 200, cameraPosition.z - 100)).length());
+			//std::cout << "Intersects at: " << pos << std::endl;
+			Unit* unit = checkIfRayIntersectsWithUnits(ray);
+			if (unit == NULL)
+			{
+				std::cout << "Not colliding with unit" << std::endl;
+				unitsLock.lock();
+				for (auto u : *localCopyOfUnits)
+				{
+					std::cout << std::endl << "Unit: " << u->getPosition() << std::endl;
+				}
+				unitsLock.unlock();
+			}
+			else
+			{
+				std::cout << "Ray intersected with unit with ID: " << unit->getUnitID() << std::endl;
+			}*/
 		}
 	}
 }
@@ -118,15 +333,18 @@ void Client::receiveMessages()
 {
 	while (true)
 	{
-		char buffer[1024];
-		int bytesReceived = Messages::receiveMessage(sock, buffer, 1024);
+		char buffer[4097];
+		int bytesReceived = Messages::receiveMessage(sock, buffer, 4096);
 		if (bytesReceived == 0)
 		{
 			return;
 		}
 		if (buffer[0] == 0x01) // Unit added message
 		{
+			buffer[bytesReceived] = '\0';
 			printf("Receiving unit add message\n");
+			char* tmpStart = buffer + 3;
+			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 			bool inID = false;
 			bool inPosition = false;
 			bool inPositionX = false;
@@ -139,70 +357,322 @@ void Client::receiveMessages()
 			bool inScaleZ = false;
 			bool inPlayerID = false;
 			bool inType = false;
+			bool inDestination = false;
+			bool inDestinationX = false;
+			bool inDestinationY = false;
+			bool inDestinationZ = false;
 
 			int id = -1;
 			Ogre::Vector3 position(0,0,0);
 			Ogre::Real rotation = 0;
 			Ogre::Vector3 scale(0,0,0);
+			Ogre::Vector3 destination(0,0,0);
 			int playerID = 0;
 			int type = UNIT_TANK;
 
-			char* token = strtok(buffer, ">");
+			char* tmpStart1 = buffer + 3;
+			char* token = strtok(tmpStart1, ">");
 			while (token != NULL)
 			{
 				std::string tmp = token;
+				bool setFlag = false;
 				if (tmp == "<ID")
 				{
 					inID = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Position")
 				{
 					inPosition = true;
+					setFlag = true;
 				}
 				else if (tmp == "<X" && inPosition)
 				{
 					inPositionX = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Y" && inPosition)
 				{
 					inPositionY = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Z" && inPosition)
 				{
 					inPositionZ = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Rotation")
 				{
 					inRotation = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Scale")
 				{
 					inScale = true;
+					setFlag = true;
 				}
 				else if (tmp == "<X" && inScale)
 				{
 					inScaleX = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Y" && inScale)
 				{
 					inScaleY = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Z" && inScale)
 				{
 					inScaleZ = true;
+					setFlag = true;
 				}
 				else if (tmp == "<PlayerID")
 				{
 					inPlayerID = true;
+					setFlag = true;
 				}
 				else if (tmp == "<Type")
 				{
 					inType = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Destination")
+				{
+					inDestination = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inDestination)
+				{
+					inDestinationX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inDestination)
+				{
+					inDestinationY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Z" && inDestination)
+				{
+					inDestinationZ = true;
+					setFlag = true;
 				}
 
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inPositionX)
+					{
+						position.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inPositionX = false;
+					}
+					else if (inPositionY)
+					{
+						position.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inPositionY = false;
+					}
+					else if (inPositionZ)
+					{
+						position.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inPositionZ = false;
+						inPosition = false;
+					}
+					else if (inPosition)
+					{
+						rotation = std::atof(tmp.substr(0, tmp.find("</Rotation")).c_str());
+						inRotation = false;
+					}
+					else if (inScaleX)
+					{
+						scale.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inScaleX = false;
+					}
+					else if (inScaleX)
+					{
+						scale.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inScaleY = false;
+					}
+					else if (inScaleZ)
+					{
+						scale.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inScaleZ = false;
+						inScale = false;
+					}
+					else if (inPlayerID)
+					{
+						playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+						inPlayerID = false;
+					}
+					else if (inType)
+					{
+						type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
+						inType = false;
+					}
+					else if (inDestinationX)
+					{
+						destination.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inDestinationX = false;
+					}
+					else if (inDestinationY)
+					{
+						destination.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inDestinationY = false;
+					}
+					else if (inDestinationZ)
+					{
+						destination.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inDestinationZ = false;
+						inDestination = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			//if (type == UNIT_TANK)
+			{
+				UnitsToCreateData data;
+				data.id = id;
+				data.playerID = playerID;
+				data.position = position;
+				data.rotation = rotation;
+				data.type = type;
+
+				unitsToCreateLock.lock();
+				unitsToCreate->push_back(data);
+				unitsToCreateLock.unlock();
+				/*Tank* tank = new Tank(position, sceneManager, playerID, id);
+				tank->setRotation(Ogre::Degree(rotation));
+				unitsLock.lock();
+				localCopyOfUnits->push_back(tank);
+				unitsLock.unlock();*/
+				printf("Received and processed unit add message\n");
+			}
+		}
+		else if (buffer[0] == 0x02) // Unit added message
+		{
+		buffer[bytesReceived] = '\0';
+		//printf("Receiving unit update message\n");
+		char* tmpStart = buffer + 3;
+		//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+		bool inID = false;
+		bool inPosition = false;
+		bool inPositionX = false;
+		bool inPositionY = false;
+		bool inPositionZ = false;
+		bool inRotation = false;
+		bool inScale = false;
+		bool inScaleX = false;
+		bool inScaleY = false;
+		bool inScaleZ = false;
+		bool inPlayerID = false;
+		bool inType = false;
+		bool inDestination = false;
+		bool inDestinationX = false;
+		bool inDestinationY = false;
+		bool inDestinationZ = false;
+
+		int id = -1;
+		Ogre::Vector3 position(0, 0, 0);
+		Ogre::Real rotation = 0;
+		Ogre::Vector3 scale(0, 0, 0);
+		Ogre::Vector3 destination(0, 0, 0);
+		int playerID = 0;
+		int type = UNIT_TANK;
+
+		char* tmpStart1 = buffer + 3;
+		char* token = strtok(tmpStart1, ">");
+		while (token != NULL)
+		{
+			std::string tmp = token;
+			bool setFlag = false;
+			if (tmp == "<ID")
+			{
+				inID = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Position")
+			{
+				inPosition = true;
+				setFlag = true;
+			}
+			else if (tmp == "<X" && inPosition)
+			{
+				inPositionX = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Y" && inPosition)
+			{
+				inPositionY = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Z" && inPosition)
+			{
+				inPositionZ = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Rotation")
+			{
+				inRotation = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Scale")
+			{
+				inScale = true;
+				setFlag = true;
+			}
+			else if (tmp == "<X" && inScale)
+			{
+				inScaleX = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Y" && inScale)
+			{
+				inScaleY = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Z" && inScale)
+			{
+				inScaleZ = true;
+				setFlag = true;
+			}
+			else if (tmp == "<PlayerID")
+			{
+				inPlayerID = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Type")
+			{
+				inType = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Destination")
+			{
+				inDestination = true;
+				setFlag = true;
+			}
+			else if (tmp == "<X" && inDestination)
+			{
+				inDestinationX = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Y" && inDestination)
+			{
+				inDestinationY = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Z" && inDestination)
+			{
+				inDestinationZ = true;
+				setFlag = true;
+			}
+
+			if (!setFlag)
+			{
 				if (inID)
 				{
-					id = std::atoi(tmp.substr(0,tmp.find("</ID")).c_str());
+					id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
 					inID = false;
 				}
 				else if (inPositionX)
@@ -252,32 +722,49 @@ void Client::receiveMessages()
 					type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
 					inType = false;
 				}
-				token = strtok(NULL, ">");
+				else if (inDestinationX)
+				{
+					destination.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+					inDestinationX = false;
+				}
+				else if (inDestinationY)
+				{
+					destination.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+					inDestinationY = false;
+				}
+				else if (inDestinationZ)
+				{
+					destination.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+					inDestinationZ = false;
+					inDestination = false;
+				}
 			}
-			if (type == UNIT_TANK)
-			{
-				UnitsToCreateData data;
-				data.id = id;
-				data.playerID = playerID;
-				data.position = position;
-				data.rotation = rotation;
-				data.type = type;
+			token = strtok(NULL, ">");
+		}
+		//if (type == UNIT_TANK)
+		{
+			UnitsToUpdate data;
+			data.id = id;
+			data.playerID = playerID;
+			data.position = position;
+			data.rotation = rotation;
+			data.type = type;
 
-				unitsToCreateLock.lock();
-				unitsToCreate->push_back(data);
-				unitsToCreateLock.unlock();
-				/*Tank* tank = new Tank(position, sceneManager, playerID, id);
-				tank->setRotation(Ogre::Degree(rotation));
-				unitsLock.lock();
-				localCopyOfUnits->push_back(tank);
-				unitsLock.unlock();*/
-				printf("Received and processed unit add message\n");
-			}
+			unitsToUpdateLock.lock();
+			unitsToUpdate->push_back(data);
+			unitsToUpdateLock.unlock();
+			/*Tank* tank = new Tank(position, sceneManager, playerID, id);
+			tank->setRotation(Ogre::Degree(rotation));
+			unitsLock.lock();
+			localCopyOfUnits->push_back(tank);
+			unitsLock.unlock();*/
+			//printf("Received and processed unit update message\n");
+		}
 		}
 	}
 }
 
-void Client::update(Ogre::SceneNode* cameraNode)
+void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 {
 	unitsToCreateLock.lock();
 	for (auto unit : *unitsToCreate)
@@ -291,7 +778,49 @@ void Client::update(Ogre::SceneNode* cameraNode)
 			unitsLock.unlock();
 		}
 	}
+	unitsToCreate->clear();
 	unitsToCreateLock.unlock();
+
+	unitsToUpdateLock.lock();
+	for (auto unit : *unitsToUpdate)
+	{
+		bool foundUnitToUpdate = false;
+		unitsLock.lock();
+		for (auto realUnit : *localCopyOfUnits)
+		{
+			if (realUnit->getUnitID() == unit.id)
+			{
+				realUnit->setPosition(unit.position);
+				realUnit->setPlayerControlledBy(unit.playerID);
+				realUnit->setRotation(Ogre::Degree(unit.rotation));
+				foundUnitToUpdate = true;
+				break;
+			}
+		}
+		if (foundUnitToUpdate == false)
+		{
+			if (unit.type == UNIT_TANK)
+			{
+				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
+				tank->setRotation(Ogre::Degree(unit.rotation));
+				localCopyOfUnits->push_back(tank);
+			}
+		}
+		unitsLock.unlock();
+	}
+	unitsToUpdateLock.unlock();
+
+	//if (clientMode == CLIENT_MODE_PASSIVE)
+	{
+		unitsLock.lock();
+		for (auto unit : *localCopyOfUnits)
+		{
+			//std::cout << "Unit: " << unit->getUnitID() << " is at: " << unit->getPosition() << std::endl;
+			//unit->update(game->getCurrentLevel());
+		}
+		unitsLock.unlock();
+	}
+	//unitsToCreateLock.unlock();
 
 	// Ask server for terrain
 	char buffer[1024];

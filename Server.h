@@ -22,6 +22,7 @@ public:
 private:
 
 	void sendUnitToClients(Unit* unit);
+	void setUpdateAboutUnit(Unit* unit);
 	void addUnit(Unit* unit);
 
 	std::vector<SOCKET>* sockets;

@@ -15,6 +15,7 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->node = sceneNode;
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
+	this->type = type;
 	movementSpeed = 0.5f;
 	if (id == -1)
 	{
@@ -72,7 +73,7 @@ void Unit::update(Level* level)
 
 int Unit::getType()
 {
-	return controlledByPlayerNumber;
+	return type;
 }
 
 
