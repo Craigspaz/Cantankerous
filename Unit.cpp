@@ -59,16 +59,133 @@ void Unit::update(Level* level)
 		}
 	}
 
-	// TODO move unit along path
+	// TODO: Pathfinding
+}
+
+bool Unit::findPath(Tile*** tiles, Tile* endTile, int width, int height)
+{
 	if (!path.empty())
 	{
-		std::vector<Tile*> openList;
-		std::vector<Tile*> closedList;
-		/*while (!openList.empty())
+		std::list<Tile*> openList;
+		std::list<Tile*> closedList;
+		Tile* startTile = tiles[(int)currentTile->getGridPosition().x][(int)currentTile->getGridPosition().y];
+		
+		while (!openList.empty())
 		{
+			Tile* currentTile = openList.front();
+			openList.pop_front();
+			closedList.push_back(currentTile);
+			// Checks if the tile with the lowest F cost is the destination
+			if (currentTile->getGridPosition().x - endTile->getGridPosition().x < 0.001 && currentTile->getGridPosition().y - endTile->getGridPosition().y < 0.001)
+			{
+				endTile->setParentTile(currentTile);
+			}
 
-		}*/
+			Tile* neighbors[8];
+
+			// If there is an adjacent upper left corner tile
+			if (currentTile->getGridPosition().x > 0 && currentTile->getGridPosition().y > 0)
+			{
+				neighbors[0] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y - 1];
+			}
+			else
+			{
+				neighbors[0] = NULL;
+			}
+			// If there is an adjacent upper tile
+			if (currentTile->getGridPosition().y > 0)
+			{
+				neighbors[1] = tiles[(int)currentTile->getGridPosition().x][(int)currentTile->getGridPosition().y - 1];
+			}
+			else
+			{
+				neighbors[1] = NULL;
+			}
+
+			// If there is an adjacent upper right corner tile
+			if (currentTile->getGridPosition().x + 1 < width && currentTile->getGridPosition().y > 0)
+			{
+				neighbors[2] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y - 1];
+			}
+			else
+			{
+				neighbors[2] = NULL;
+			}
+
+			// if there is an adjacent left tile
+			if (currentTile->getGridPosition().x > 0)
+			{
+				neighbors[3] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y];
+			}
+			else
+			{
+				neighbors[3] = NULL;
+			}
+			
+			// if there is an adjacent right tile
+			if (currentTile->getGridPosition().x + 1< width)
+			{
+				neighbors[4] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y];
+			}
+			else
+			{
+				neighbors[4] = NULL;
+			}
+
+			//if there is an adjacent lower left tile
+			if (currentTile->getGridPosition().x > 0 && currentTile->getGridPosition().y + 1< height)
+			{
+				neighbors[5] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y + 1];
+			}
+			else
+			{
+				neighbors[5] = NULL;
+			}
+
+			// if there is an adjacent lower tile
+			if (currentTile->getGridPosition().y + 1 < height)
+			{
+				neighbors[6] = tiles[(int)currentTile->getGridPosition().x][(int)currentTile->getGridPosition().y + 1];
+			}
+			else
+			{
+				neighbors[6] = NULL;
+			}
+
+			// if there is an adjacent lower right corner
+			if (currentTile->getGridPosition().x + 1 < width && currentTile->getGridPosition().y + 1 < height)
+			{
+				neighbors[7] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y + 1];
+			}
+			else
+			{
+				neighbors[7] = NULL;
+			}
+
+			for (int i = 0; i < 8; i++)
+			{
+				if (neighbors[i] != NULL)
+				{
+					if (!(std::find(openList.begin(), openList.end(), neighbors[i]) != openList.end() || currentTile->getG() + 10))
+					{
+						neighbors[i]->setParentTile(currentTile);
+						neighbors[i]->setG(currentTile->getG() + 10);
+						neighbors[i]->setH(abs(neighbors[i]->getGridPosition().x - endTile->getGridPosition().x) + abs(neighbors[i]->getGridPosition().y - endTile->getGridPosition().y));
+						neighbors[i]->setF(neighbors[i]->getG() + neighbors[i]->getH());
+						for (std::list<Tile*>::iterator it = openList.begin(); it != openList.end(); it++)
+						{
+							if (neighbors[i]->getF() < (*it)->getF())
+							{
+								openList.insert(it, neighbors[i]);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
+	return false;
 }
 
 int Unit::getType()

@@ -17,6 +17,10 @@ public:
 	std::string getFileName();
 
 	std::vector<Tile*>* getTiles();
+	void setWidth(int width);
+	void setHeight(int height);
+	int getWidth();
+	int getHeight();
 
 private:
 
@@ -29,6 +33,9 @@ private:
 	
 	Ogre::Vector3 minCorner;
 	Ogre::Vector3 maxCorner;
+
+	int width;
+	int height;
 };
 
 #endif

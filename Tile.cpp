@@ -72,3 +72,50 @@ double Tile::getScale()
 {
 	return scale;
 }
+
+void Tile::setG(int g)
+{
+	this->G = g;
+}
+void Tile::setH(int h)
+{
+	this->H = h;
+}
+void Tile::setF(int f)
+{
+	this->F = f;
+}
+
+int Tile::getG()
+{
+	return G;
+}
+
+int Tile::getH()
+{
+	return H;
+}
+
+int Tile::getF()
+{
+	return F;
+}
+
+void Tile::setParentTile(Tile* parentTile)
+{
+	this->parentTile = parentTile;
+}
+Tile* Tile::getParentTile()
+{
+	return this->parentTile;
+}
+
+
+Ogre::Vector2 Tile::getGridPosition()
+{
+	return this->gridPosition;
+}
+void Tile::setGridPosition(Ogre::Vector2 pos)
+{
+	this->gridPosition = pos;
+}

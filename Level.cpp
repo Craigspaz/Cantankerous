@@ -45,11 +45,13 @@ void Level::loadLevel()
 	int scale = 25;
 	while (std::getline(file, line))
 	{
+		width = line.length();
 		for (int i = 0; i < line.length(); i++)
 		{
 			if (line.at(i) == 'g') // grass
 			{
 				Tile* tile = new Tile(Ogre::Vector3(i, 0, row) , sceneManager, GRASS_TILE, scale);
+				tile->setGridPosition(Ogre::Vector2(i, row));
 				tiles->push_back(tile);
 				if (row == 0 && i == 0)
 				{
@@ -60,6 +62,7 @@ void Level::loadLevel()
 			else if (line.at(i) == 'd') // dirt
 			{
 				Tile* tile = new Tile(Ogre::Vector3(i, 0, row), sceneManager, DIRT_TILE, scale);
+				tile->setGridPosition(Ogre::Vector2(i, row));
 				tiles->push_back(tile);
 				maxCorner = tile->getPosition();
 			}
@@ -70,6 +73,7 @@ void Level::loadLevel()
 		}
 		row++;
 	}
+	height = row;
 	file.close();
 }
 
@@ -77,4 +81,22 @@ void Level::loadLevel()
 std::vector<Tile*>* Level::getTiles()
 {
 	return tiles;
+}
+
+
+void Level::setWidth(int width)
+{
+	this->width = width;
+}
+void Level::setHeight(int height)
+{
+	this->height = height;
+}
+int Level::getWidth()
+{
+	return width;
+}
+int Level::getHeight()
+{
+	return height;
 }

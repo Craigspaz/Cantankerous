@@ -17,6 +17,20 @@ public:
 	void setOccupied(bool a);
 	double getScale();
 
+	// Used for pathfinding in unit class
+	void setG(int g);
+	void setH(int h);
+	void setF(int f);
+
+	int getG();
+	int getH();
+	int getF();
+
+	void setParentTile(Tile* parentTile);
+	Tile* getParentTile();
+	Ogre::Vector2 getGridPosition();
+	void setGridPosition(Ogre::Vector2 pos);
+
 private:
 	Ogre::Vector3 position;
 	Ogre::SceneManager* sceneManager;
@@ -26,6 +40,13 @@ private:
 	std::string name;
 	double scale;
 	bool occupied;
+
+	// Used for pathfinding in unit class
+	int G;
+	int H;
+	int F;
+	Tile* parentTile;
+	Ogre::Vector2 gridPosition;
 };
 
 #endif

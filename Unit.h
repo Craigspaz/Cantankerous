@@ -39,6 +39,9 @@ protected:
 	Ogre::SceneManager* manager;
 	int controlledByPlayerNumber;
 	int type;
+
+private:
+	bool findPath(Tile*** tiles, Tile* endTile, int width, int height);
 };
 
 #endif
