@@ -21,16 +21,16 @@ public:
 	
 	virtual void update(Level* level);
 	int getType();
-	void generatePath(Tile* destination, Level* level);
 
 	int getPlayerControlledBy();
 	void setPlayerControlledBy(int i);
 	int getUnitID();
 
-protected:
-	bool checkPath();
+	void setDestination(Tile* tile, Level* level);
+	bool isMoving();
 
-	std::vector<Tile*> path;
+protected:
+	std::list<Tile*>* path;
 	Tile* currentTile;
 	double movementSpeed;
 	int id;
@@ -39,9 +39,10 @@ protected:
 	Ogre::SceneManager* manager;
 	int controlledByPlayerNumber;
 	int type;
+	bool isMovingAlongPath;
 
 private:
-	bool findPath(Tile*** tiles, Tile* endTile, int width, int height);
+	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);
 };
 
 #endif

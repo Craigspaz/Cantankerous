@@ -9,6 +9,10 @@ std::string getNewName() // return a unique name
 	return "tile_" + out.str();	// append the current count onto the string
 }
 
+Tile::Tile()
+{
+	// Default constructor
+}
 
 Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double scale)
 {
@@ -118,4 +122,9 @@ Ogre::Vector2 Tile::getGridPosition()
 void Tile::setGridPosition(Ogre::Vector2 pos)
 {
 	this->gridPosition = pos;
+}
+
+int Tile::getType()
+{
+	return type;
 }

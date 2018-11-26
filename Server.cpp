@@ -36,8 +36,12 @@ void Server::update()
 {
 	for (auto unit : *units)
 	{
-		unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
+		//unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
 		unit->update(game->getCurrentLevel());
+		if (unit->isMoving() == false)
+		{
+			unit->setDestination(game->getCurrentLevel()->getTiles()->at(25), game->getCurrentLevel());
+		}
 		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
 		setUpdateAboutUnit(unit);
 	}

@@ -9,6 +9,7 @@
 class Tile
 {
 public:
+	Tile();
 	Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double scale);
 	~Tile();
 	Ogre::Vector3 getPosition();
@@ -30,6 +31,7 @@ public:
 	Tile* getParentTile();
 	Ogre::Vector2 getGridPosition();
 	void setGridPosition(Ogre::Vector2 pos);
+	int getType();
 
 private:
 	Ogre::Vector3 position;

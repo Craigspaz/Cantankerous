@@ -27,6 +27,7 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 
 void Tank::update(Level* level)
 {
+	Unit::update(level);
 	//this->setPosition(this->getPosition() + Ogre::Vector3(0.5, 0, 0));
 }
 
