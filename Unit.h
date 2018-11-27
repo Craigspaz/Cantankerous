@@ -30,12 +30,17 @@ public:
 	void setDestination(Tile* tile, Level* level);
 	bool isMoving();
 	Ogre::Vector3 getDirectionMoving();
+	virtual void setVisible(bool value) = 0;
+	void setSelected(bool value);
 
 protected:
 	std::list<Tile*>* path;
 	Tile* currentTile;
 	double movementSpeed;
 	int id;
+	int health;
+	int damage;
+	Ogre::SceneNode* selectionNode;
 
 	Ogre::SceneNode* node;
 	Ogre::SceneManager* manager;

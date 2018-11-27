@@ -28,6 +28,9 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	}
 	path = new std::list<Tile*>();
 	isMovingAlongPath = false;
+	this->health = 100;
+	this->damage = 10;
+	selectionNode = NULL;
 }
 
 
@@ -384,4 +387,26 @@ void Unit::setDestination(Tile* tile, Level* level)
 Ogre::Vector3 Unit::getDirectionMoving()
 {
 	return this->directionMoving;
+}
+
+
+void Unit::setSelected(bool value)
+{
+	if (value == true && selectionNode == NULL)
+	{
+		Ogre::SceneNode* selectNode = this->node->createChildSceneNode();
+		selectNode->setPosition(Ogre::Vector3(selectNode->getPosition().x, 20, selectNode->getPosition().z));
+		Ogre::Entity* entity = this->manager->createEntity(Ogre::SceneManager::PT_CUBE);
+		selectNode->attachObject(entity);
+		selectNode->setScale(selectNode->getScale() / 50.0);
+	}
+	else
+	{
+		if (selectionNode == NULL)
+		{
+			return;
+		}
+		selectionNode->removeAndDestroyAllChildren();
+		selectionNode = NULL;
+	}
 }

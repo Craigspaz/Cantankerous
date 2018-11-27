@@ -10,6 +10,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	unitsToUpdate = new std::vector<UnitsToUpdate>();
 	this->sceneManager = sceneManager;
 	this->game = game;
+	this->selectedUnit = NULL;
 	sock = Messages::createSocket();
 	inet_pton(AF_INET, ip.c_str(), &(connection.sin_addr.s_addr));
 	connection.sin_family = AF_INET;
@@ -153,7 +154,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 			{
 				if ((*i).distance > 2.0f)
 				{
-					std::cout << "Found collision" << std::endl;
+					//std::cout << "Found collision" << std::endl;
 					Ogre::Entity* res = (Ogre::Entity*)((*i).movable);
 					unitsLock.lock();
 					for (auto unit : *localCopyOfUnits)
@@ -163,7 +164,12 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							Tank* tank = (Tank*)unit;
 							if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 							{
-								std::cout << "Clicked on tank" << std::endl;
+								//std::cout << "Clicked on tank" << std::endl;
+								if (selectedUnit != NULL)
+								{
+									selectedUnit->setSelected(false);
+								}
+								tank->setSelected(true);
 								selectedUnit = unit;
 								unitsLock.unlock();
 								return;
