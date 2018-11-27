@@ -328,7 +328,7 @@ void Client::receiveMessages()
 						inPositionZ = false;
 						inPosition = false;
 					}
-					else if (inPosition)
+					else if (inRotation)
 					{
 						rotation = std::atof(tmp.substr(0, tmp.find("</Rotation")).c_str());
 						inRotation = false;
@@ -539,7 +539,7 @@ void Client::receiveMessages()
 					inPositionZ = false;
 					inPosition = false;
 				}
-				else if (inPosition)
+				else if (inRotation)
 				{
 					rotation = std::atof(tmp.substr(0, tmp.find("</Rotation")).c_str());
 					inRotation = false;
@@ -614,13 +614,13 @@ void Client::receiveMessages()
 
 void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 {
-	unitsToCreateLock.lock();
+	/*unitsToCreateLock.lock();
 	for (auto unit : *unitsToCreate)
 	{
 		if (unit.type == UNIT_TANK)
 		{
 			Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-			tank->setRotation(Ogre::Degree(unit.rotation));
+			tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Z));
 			if (clientMode == CLIENT_MODE_PASSIVE)
 			{
 				//tank->setVisible(false);
@@ -654,7 +654,8 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			if (unit.type == UNIT_TANK)
 			{
 				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-				tank->setRotation(Ogre::Degree(unit.rotation));
+				tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Z));
+				//tank->setRotation(Ogre::Degree(unit.rotation));
 				if (clientMode == CLIENT_MODE_PASSIVE)
 				{
 					//tank->setVisible(false);
@@ -666,7 +667,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	}
 	unitsToUpdate->clear();
 	unitsToUpdateLock.unlock();
-
+	*/
 	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{
 		unitsLock.lock();

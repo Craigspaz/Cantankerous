@@ -99,13 +99,14 @@ void Unit::update(Level* level)
 		if (this->getPosition().z - nextTile->getPosition().z > 0)
 		{
 			// move up
-			this->setPosition(this->getPosition() + Ogre::Vector3(0, -movementSpeed, 0));
+			this->setPosition(this->getPosition() + Ogre::Vector3(0, 0, -movementSpeed));
 		}
 		else if (this->getPosition().z - nextTile->getPosition().z < 0)
 		{
 			// move down
-			this->setPosition(this->getPosition() + Ogre::Vector3(0, movementSpeed, 0));
+			this->setPosition(this->getPosition() + Ogre::Vector3(0, 0, movementSpeed));
 		}
+		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();
 	}
 }
 
@@ -298,6 +299,12 @@ Ogre::Quaternion Unit::getOrientation()
 }
 
 
+void Unit::setOrientation(Ogre::Quaternion a)
+{
+	this->node->setOrientation(a);
+}
+
+
 Ogre::Vector3 Unit::getScale()
 {
 	return this->node->getScale();
@@ -372,4 +379,9 @@ void Unit::setDestination(Tile* tile, Level* level)
 		delete copyOfTiles[x];
 	}
 	delete copyOfTiles;
+}
+
+Ogre::Vector3 Unit::getDirectionMoving()
+{
+	return this->directionMoving;
 }

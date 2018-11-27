@@ -13,22 +13,22 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->base = tmpEntity;
 
 	tmpEntity = sceneManager->createEntity("turret_Cube.001.mesh");
-	this->turretNode = this->node->createChildSceneNode();
-	this->turretNode->scale(Ogre::Vector3(3, 3, 3));
-	this->turretNode->rotate(Ogre::Vector3::UNIT_Y, Ogre::Radian(Ogre::Degree(100)));
+	this->turretNode = this->baseNode->createChildSceneNode();
+	//this->turretNode->scale(Ogre::Vector3(3, 3, 3));
+	this->turretNode->rotate(Ogre::Vector3::UNIT_Y, Ogre::Radian(Ogre::Degree(-78)));
 	this->turretNode->attachObject(tmpEntity);
 	this->turret = tmpEntity;
 	
-
-	this->turretNode->showBoundingBox(true);
-	this->baseNode->showBoundingBox(true);
+	// For debugging
+	//this->turretNode->showBoundingBox(true);
+	//this->baseNode->showBoundingBox(true);
 }
 
 
 void Tank::update(Level* level)
 {
 	Unit::update(level);
-	//this->setPosition(this->getPosition() + Ogre::Vector3(0.5, 0, 0));
+	this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(this->directionMoving));
 }
 
 Tank::~Tank()
