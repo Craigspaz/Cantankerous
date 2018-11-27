@@ -36,8 +36,16 @@ void Server::update()
 {
 	for (auto unit : *units)
 	{
-		unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
+		//unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
 		unit->update(game->getCurrentLevel());
+
+		// tmp
+		if (unit->isMoving() == false && unit->getPosition().x == 0 && unit->getPosition().z == 0)
+		{
+			std::cout << "Finding path to : " << (game->getCurrentLevel()->getTiles()->at(170)->getGridPosition()) << std::endl;
+			unit->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
+		}
+
 		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
 		setUpdateAboutUnit(unit);
 	}
@@ -81,7 +89,7 @@ void Server::setUpdateAboutUnit(Unit* unit)
 {
 	//printf("Sending unit update to clients");
 	char sendBuffer[1024];
-	Ogre::Vector3 facingDirection = unit->getOrientation() * Ogre::Vector3::UNIT_Z;;
+	Ogre::Vector3 facingDirection = unit->getDirectionMoving();
 	sendBuffer[0] = 0x02;
 	std::string message = "<ID>" + std::to_string(unit->getUnitID());
 	message += "</ID><Position><X>";
@@ -91,7 +99,7 @@ void Server::setUpdateAboutUnit(Unit* unit)
 	message += "</Y><Z>";
 	message += std::to_string(unit->getPosition().z);
 	message += "</Z></Position><Rotation>";
-	message += std::to_string(Ogre::Degree(-facingDirection.angleBetween(Ogre::Vector3::UNIT_Z)).valueDegrees());
+	message += std::to_string(Ogre::Degree(Ogre::Vector3::UNIT_Z.angleBetween(facingDirection)).valueDegrees());
 	message += "</Rotation><Scale><X>";
 	message += std::to_string(unit->getScale().x);
 	message += "</X><Y>";

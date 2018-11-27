@@ -64,6 +64,8 @@ private:
 	std::mutex unitsToUpdateLock;
 	std::vector<UnitsToUpdate>* unitsToUpdate;
 
+	Unit* selectedUnit;
+
 };
 
 #endif

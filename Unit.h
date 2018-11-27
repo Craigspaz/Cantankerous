@@ -17,20 +17,22 @@ public:
 	void setRotation(Ogre::Degree rotation);
 	void setScale(Ogre::Vector3 scale);
 	Ogre::Quaternion getOrientation();
+	void setOrientation(Ogre::Quaternion a);
 	Ogre::Vector3 getScale();
 	
 	virtual void update(Level* level);
 	int getType();
-	void generatePath(Tile* destination, Level* level);
 
 	int getPlayerControlledBy();
 	void setPlayerControlledBy(int i);
 	int getUnitID();
 
-protected:
-	bool checkPath();
+	void setDestination(Tile* tile, Level* level);
+	bool isMoving();
+	Ogre::Vector3 getDirectionMoving();
 
-	std::vector<Tile*> path;
+protected:
+	std::list<Tile*>* path;
 	Tile* currentTile;
 	double movementSpeed;
 	int id;
@@ -39,6 +41,11 @@ protected:
 	Ogre::SceneManager* manager;
 	int controlledByPlayerNumber;
 	int type;
+	bool isMovingAlongPath;
+	Ogre::Vector3 directionMoving;
+
+private:
+	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);
 };
 
 #endif

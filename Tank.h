@@ -15,6 +15,7 @@ public:
 
 	Ogre::Entity* getTurretEntity();
 	Ogre::Entity* getBaseEntity();
+	void setVisible(bool value);
 
 private:
 	Ogre::SceneNode* turretNode;

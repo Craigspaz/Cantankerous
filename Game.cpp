@@ -205,7 +205,7 @@ void Game::update()
 {
 	if (gameMode == 1) // Client
 	{
-		client->update(this->cameraNode, CLIENT_MODE_PASSIVE);
+		client->update(this->cameraNode, CLIENT_MODE_ACTIVE);
 	}
 	else if (gameMode == 2) // Server
 	{

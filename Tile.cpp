@@ -9,6 +9,10 @@ std::string getNewName() // return a unique name
 	return "tile_" + out.str();	// append the current count onto the string
 }
 
+Tile::Tile()
+{
+	// Default constructor
+}
 
 Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double scale)
 {
@@ -39,6 +43,9 @@ Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double
 	Ogre::SceneNode* node = manager->getRootSceneNode()->createChildSceneNode();
 	node->attachObject(this->entity);
 	node->setPosition(position);
+	G = 0;
+	F = 0;
+	H = 0;
 }
 
 Tile::~Tile()
@@ -71,4 +78,56 @@ void Tile::setOccupied(bool a)
 double Tile::getScale()
 {
 	return scale;
+}
+
+void Tile::setG(int g)
+{
+	this->G = g;
+}
+void Tile::setH(int h)
+{
+	this->H = h;
+}
+void Tile::setF(int f)
+{
+	this->F = f;
+}
+
+int Tile::getG()
+{
+	return G;
+}
+
+int Tile::getH()
+{
+	return H;
+}
+
+int Tile::getF()
+{
+	return F;
+}
+
+void Tile::setParentTile(Tile* parentTile)
+{
+	this->parentTile = parentTile;
+}
+Tile* Tile::getParentTile()
+{
+	return this->parentTile;
+}
+
+
+Ogre::Vector2 Tile::getGridPosition()
+{
+	return this->gridPosition;
+}
+void Tile::setGridPosition(Ogre::Vector2 pos)
+{
+	this->gridPosition = pos;
+}
+
+int Tile::getType()
+{
+	return type;
 }
