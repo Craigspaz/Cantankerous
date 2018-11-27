@@ -614,16 +614,16 @@ void Client::receiveMessages()
 
 void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 {
-	/*unitsToCreateLock.lock();
+	unitsToCreateLock.lock();
 	for (auto unit : *unitsToCreate)
 	{
 		if (unit.type == UNIT_TANK)
 		{
 			Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-			tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Z));
+			tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
 			if (clientMode == CLIENT_MODE_PASSIVE)
 			{
-				//tank->setVisible(false);
+				tank->setVisible(false);
 			}
 			unitsLock.lock();
 			localCopyOfUnits->push_back(tank);
@@ -644,7 +644,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			{
 				realUnit->setPosition(unit.position);
 				realUnit->setPlayerControlledBy(unit.playerID);
-				realUnit->setRotation(Ogre::Degree(unit.rotation));
+				realUnit->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
 				foundUnitToUpdate = true;
 				break;
 			}
@@ -654,11 +654,11 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			if (unit.type == UNIT_TANK)
 			{
 				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-				tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Z));
+				tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
 				//tank->setRotation(Ogre::Degree(unit.rotation));
 				if (clientMode == CLIENT_MODE_PASSIVE)
 				{
-					//tank->setVisible(false);
+					tank->setVisible(false);
 				}
 				localCopyOfUnits->push_back(tank);
 			}
@@ -667,7 +667,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	}
 	unitsToUpdate->clear();
 	unitsToUpdateLock.unlock();
-	*/
+	
 	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{
 		unitsLock.lock();
