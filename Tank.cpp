@@ -4,7 +4,7 @@
 
 
 
-Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int id) : Unit(position,sceneManager,controlledByPlayerNumber, UNIT_TANK)
+Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int id) : Unit(position,sceneManager,controlledByPlayerNumber, UNIT_TANK, id)
 {
 	Ogre::Entity* tmpEntity = sceneManager->createEntity("treds_Cube.mesh");
 	this->baseNode = this->node->createChildSceneNode();
@@ -54,4 +54,11 @@ Ogre::Entity* Tank::getTurretEntity()
 Ogre::Entity* Tank::getBaseEntity()
 {
 	return base;
+}
+
+
+void Tank::setVisible(bool value)
+{
+	this->base->setVisible(value);
+	this->turret->setVisible(value);
 }

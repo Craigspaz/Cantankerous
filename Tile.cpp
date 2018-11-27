@@ -43,6 +43,9 @@ Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double
 	Ogre::SceneNode* node = manager->getRootSceneNode()->createChildSceneNode();
 	node->attachObject(this->entity);
 	node->setPosition(position);
+	G = 0;
+	F = 0;
+	H = 0;
 }
 
 Tile::~Tile()

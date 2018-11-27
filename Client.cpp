@@ -621,6 +621,10 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		{
 			Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
 			tank->setRotation(Ogre::Degree(unit.rotation));
+			if (clientMode == CLIENT_MODE_PASSIVE)
+			{
+				//tank->setVisible(false);
+			}
 			unitsLock.lock();
 			localCopyOfUnits->push_back(tank);
 			unitsLock.unlock();
@@ -651,6 +655,10 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			{
 				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
 				tank->setRotation(Ogre::Degree(unit.rotation));
+				if (clientMode == CLIENT_MODE_PASSIVE)
+				{
+					//tank->setVisible(false);
+				}
 				localCopyOfUnits->push_back(tank);
 			}
 		}

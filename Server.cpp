@@ -38,10 +38,14 @@ void Server::update()
 	{
 		//unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
 		unit->update(game->getCurrentLevel());
-		if (unit->isMoving() == false)
+
+		// tmp
+		if (unit->isMoving() == false && unit->getPosition().x == 0 && unit->getPosition().z == 0)
 		{
-			unit->setDestination(game->getCurrentLevel()->getTiles()->at(25), game->getCurrentLevel());
+			std::cout << "Finding path to : " << (game->getCurrentLevel()->getTiles()->at(3)->getGridPosition()) << std::endl;
+			unit->setDestination(game->getCurrentLevel()->getTiles()->at(3), game->getCurrentLevel());
 		}
+
 		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
 		setUpdateAboutUnit(unit);
 	}

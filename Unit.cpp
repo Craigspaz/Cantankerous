@@ -22,6 +22,10 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	{
 		this->id = getID();
 	}
+	else
+	{
+		this->id = id;
+	}
 	path = new std::list<Tile*>();
 	isMovingAlongPath = false;
 }
@@ -63,9 +67,24 @@ void Unit::update(Level* level)
 	}
 
 	// TODO: Pathfinding
-	if (!path->empty())
+	if (!path->empty() && this->isMovingAlongPath)
 	{
 		Tile* nextTile = path->front();
+		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) < movementSpeed)
+		{
+			currentTile = nextTile;
+			path->pop_front();
+			if (!path->empty())
+			{
+				nextTile = path->front();
+			}
+			else
+			{
+				this->isMovingAlongPath = false;
+				return;
+			}
+		}
+
 		if (this->getPosition().x - nextTile->getPosition().x > 0)
 		{
 			// move left
@@ -107,9 +126,9 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 		// Checks if the tile with the lowest F cost is the destination
 		if (abs(currentTile->getGridPosition().x - endTile->getGridPosition().x) < 0.001 && abs(currentTile->getGridPosition().y - endTile->getGridPosition().y) < 0.001)
 		{
-			endTile->setParentTile(currentTile);
+			//endTile->setParentTile(currentTile);
 			Tile* tmpTile = endTile;
-			while (tmpTile != NULL)
+			while (tmpTile != NULL && tmpTile != startTile)
 			{
 				newPath->push_front(tmpTile);
 				tmpTile = tmpTile->getParentTile();
@@ -217,7 +236,7 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 						if (!(std::find(openList.begin(), openList.end(), neighbors[i]) != openList.end()) || currentTile->getG() + cost < neighbors[i]->getG())
 						{
 							neighbors[i]->setParentTile(currentTile);
-							neighbors[i]->setG(currentTile->getG() + 10);
+							neighbors[i]->setG(currentTile->getG() + cost);
 							neighbors[i]->setH(abs(neighbors[i]->getGridPosition().x - endTile->getGridPosition().x) + abs(neighbors[i]->getGridPosition().y - endTile->getGridPosition().y));
 							neighbors[i]->setF(neighbors[i]->getG() + neighbors[i]->getH());
 							if (openList.empty())
@@ -337,9 +356,20 @@ void Unit::setDestination(Tile* tile, Level* level)
 		{
 			if (front->getGridPosition().x == (*i)->getGridPosition().x && front->getGridPosition().y == (*i)->getGridPosition().y)
 			{
-				path->push_front((*i));
+				path->push_back((*i));
+				break;
 			}
 		}
 		nPath->pop_front();
 	}
+	delete nPath;
+	for (int x = 0; x < level->getWidth(); x++)
+	{
+		for (int y = 0; y < level->getHeight(); y++)
+		{
+			delete copyOfTiles[x][y];
+		}
+		delete copyOfTiles[x];
+	}
+	delete copyOfTiles;
 }
