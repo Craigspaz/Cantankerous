@@ -31,7 +31,7 @@ private:
 	{
 		int id = -1;
 		Ogre::Vector3 position;
-		Ogre::Real rotation;
+		Ogre::Vector3 directionFacing;
 		int playerID;
 		int type;
 	};
@@ -40,7 +40,7 @@ private:
 	{
 		int id = -1;
 		Ogre::Vector3 position;
-		Ogre::Real rotation;
+		Ogre::Vector3 directionFacing;
 		int playerID;
 		int type;
 	};
@@ -51,6 +51,7 @@ private:
 	void processInitialMessage(char* message);
 	void getInitialInfo();
 	void receiveMessages();
+	void tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords);
 
 	SOCKET sock;
 	struct sockaddr_in connection;

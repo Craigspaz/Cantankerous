@@ -16,7 +16,8 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
 	this->type = type;
-	movementSpeed = 0.5f;
+	movementSpeed = 0.5f; 
+	directionMoving = Ogre::Vector3(0, 0, 1);
 	this->currentTile = NULL;
 	if (id == -1)
 	{
@@ -28,6 +29,9 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	}
 	path = new std::list<Tile*>();
 	isMovingAlongPath = false;
+	this->health = 100;
+	this->damage = 10;
+	selectionNode = NULL;
 }
 
 
@@ -70,7 +74,7 @@ void Unit::update(Level* level)
 	if (!path->empty() && this->isMovingAlongPath)
 	{
 		Tile* nextTile = path->front();
-		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) < movementSpeed)
+		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) <= movementSpeed)
 		{
 			currentTile = nextTile;
 			path->pop_front();
@@ -106,7 +110,8 @@ void Unit::update(Level* level)
 			// move down
 			this->setPosition(this->getPosition() + Ogre::Vector3(0, 0, movementSpeed));
 		}
-		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();
+		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();//this->getPosition();//this->currentTile->getPosition();
+		this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(this->directionMoving));
 	}
 }
 
@@ -384,4 +389,26 @@ void Unit::setDestination(Tile* tile, Level* level)
 Ogre::Vector3 Unit::getDirectionMoving()
 {
 	return this->directionMoving;
+}
+
+
+void Unit::setSelected(bool value)
+{
+	if (value == true && selectionNode == NULL)
+	{
+		Ogre::SceneNode* selectNode = this->node->createChildSceneNode();
+		selectNode->setPosition(Ogre::Vector3(selectNode->getPosition().x, 20, selectNode->getPosition().z));
+		Ogre::Entity* entity = this->manager->createEntity(Ogre::SceneManager::PT_CUBE);
+		selectNode->attachObject(entity);
+		selectNode->setScale(selectNode->getScale() / 50.0);
+	}
+	else
+	{
+		if (selectionNode == NULL)
+		{
+			return;
+		}
+		selectionNode->removeAndDestroyAllChildren();
+		selectionNode = NULL;
+	}
 }
