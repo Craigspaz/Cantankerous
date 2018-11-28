@@ -23,10 +23,16 @@ Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double
 	this->sceneManager = manager;
 	this->type = type;
 	this->scale = scale;
-	Ogre::Plane floorPlane(Ogre::Vector3::UNIT_Y, 0);
+	//floorPlane = new Ogre::Plane(Ogre::Vector3::UNIT_Y, 0);
+	this->node = manager->getRootSceneNode()->createChildSceneNode();
 	this->name = getNewName();
-	Ogre::MeshManager::getSingleton().createPlane(this->name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, floorPlane, scale, scale, 1, 1, true, 1, 1.0, 1.0, Ogre::Vector3::UNIT_Z);
-	this->entity = manager->createEntity(this->name);
+	//Ogre::MeshManager::getSingleton().createPlane(this->name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, *floorPlane, scale, scale, 1, 1, true, 1, 1.0, 1.0, Ogre::Vector3::UNIT_Z);
+	this->entity = manager->createEntity(this->name, Ogre::SceneManager::PT_PLANE);
+	this->node->attachObject(entity);
+	this->node->setScale(this->node->getScale() / 200.0);
+	this->node->scale(Ogre::Vector3(scale, scale, scale));
+	this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(Ogre::Vector3::UNIT_Y));
+	this->node->setPosition(position);
 
 	if (type == GRASS_TILE)
 	{
@@ -40,9 +46,6 @@ Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double
 	{
 		this->entity->setMaterialName("Examples/Rockwall");
 	}
-	Ogre::SceneNode* node = manager->getRootSceneNode()->createChildSceneNode();
-	node->attachObject(this->entity);
-	node->setPosition(position);
 	G = 0;
 	F = 0;
 	H = 0;
@@ -51,6 +54,7 @@ Tile::Tile(Ogre::Vector3 position, Ogre::SceneManager* manager, int type, double
 Tile::~Tile()
 {
 	sceneManager->destroyEntity(this->entity);
+	sceneManager->getRootSceneNode()->removeAndDestroyChild(this->node);
 }
 
 Ogre::Vector3 Tile::getPosition()

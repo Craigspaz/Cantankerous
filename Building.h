@@ -9,8 +9,20 @@
 class Building
 {
 public:
-	Building(Ogre::Vector3 position, Ogre::Entity* entity, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type);
+	Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type);
 	~Building();
+
+	Ogre::Vector3 getPosition();
+	Ogre::Entity* getEntity();
+	int getControllingPlayerID();
+	int getType();
+
+private:
+	Ogre::Entity* entity;
+	Ogre::SceneManager* sceneManager;
+	int controlledByPlayerNumber;
+	int type;
+	Ogre::SceneNode* node;
 };
 
 #endif
