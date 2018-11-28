@@ -17,7 +17,8 @@ public:
 	~Server();
 
 	void update(); // simulates the game
-	void waitForMessages(); // Dedicated to separate thread to recieve input from players
+	void waitForMessages(SOCKET sock); // Dedicated to separate thread to recieve input from players
+	void listenForConnections(); // Dedicated thread to waiting for connections
 
 private:
 
@@ -36,6 +37,15 @@ private:
 	struct sockaddr_in connection;
 	Game* game;
 	Ogre::SceneManager* sceneManager;
+
+	struct UnitPathFindingStruct
+	{
+		Unit* unit;
+		Tile* destinationTile;
+	};
+
+	std::list<UnitPathFindingStruct>* pathFindingQueue;
+	std::mutex pathFindingLock;
 
 };
 

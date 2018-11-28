@@ -131,3 +131,9 @@ int Tile::getType()
 {
 	return type;
 }
+
+
+Ogre::Entity* Tile::getEntity()
+{
+	return this->entity;
+}

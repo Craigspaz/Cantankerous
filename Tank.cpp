@@ -20,6 +20,8 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->turret = tmpEntity;
 	this->health = 100 + rand() % 100;
 	this->damage = 5 + rand() % 10;
+
+	baseNode->setOrientation((baseNode->getOrientation() * Ogre::Vector3::UNIT_Z).getRotationTo(Ogre::Vector3::UNIT_Z));
 	// For debugging
 	//this->turretNode->showBoundingBox(true);
 	//this->baseNode->showBoundingBox(true);

@@ -32,6 +32,7 @@ public:
 	Ogre::Vector2 getGridPosition();
 	void setGridPosition(Ogre::Vector2 pos);
 	int getType();
+	Ogre::Entity* getEntity();
 
 private:
 	Ogre::Vector3 position;
