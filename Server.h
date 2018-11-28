@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include "Messages.h"
+#include "Building.h"
 
 class Game;
 
@@ -46,6 +47,9 @@ private:
 
 	std::list<UnitPathFindingStruct>* pathFindingQueue;
 	std::mutex pathFindingLock;
+
+	std::vector<Building*>* buildings;
+	std::mutex buildingsLock;
 
 };
 

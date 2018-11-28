@@ -36,6 +36,8 @@ public:
 
 private:
 	Ogre::Vector3 position;
+	//Ogre::Plane* floorPlane;
+	Ogre::SceneNode* node;
 	Ogre::SceneManager* sceneManager;
 	int type;
 

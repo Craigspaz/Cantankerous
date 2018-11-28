@@ -4,7 +4,6 @@
 #include <thread>
 #include <chrono>
 
-
 Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 {
 	this->game = game;
@@ -14,6 +13,8 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	units = new std::vector<Unit*>();
 	sockets = new std::vector<SOCKET>();
 	pathFindingQueue = new std::list<UnitPathFindingStruct>();
+	buildings = new std::vector<Building*>();
+
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
 	connection.sin_addr.s_addr = INADDR_ANY;
@@ -25,6 +26,9 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
 	addUnit(tank);
+	Building* building = new Building(Ogre::Vector3(0, 20, 0), this->sceneManager, 1, BUILDING_CONSTRUCTOR);
+	buildings->push_back(building);
+	
 }
 
 
