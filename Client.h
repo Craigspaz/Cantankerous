@@ -31,7 +31,7 @@ private:
 	{
 		int id = -1;
 		Ogre::Vector3 position;
-		Ogre::Real rotation;
+		Ogre::Vector3 directionFacing;
 		int playerID;
 		int type;
 	};
@@ -40,7 +40,7 @@ private:
 	{
 		int id = -1;
 		Ogre::Vector3 position;
-		Ogre::Real rotation;
+		Ogre::Vector3 directionFacing;
 		int playerID;
 		int type;
 	};

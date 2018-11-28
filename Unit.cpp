@@ -16,7 +16,8 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
 	this->type = type;
-	movementSpeed = 0.5f;
+	movementSpeed = 0.5f; 
+	directionMoving = Ogre::Vector3(0, 0, 1);
 	this->currentTile = NULL;
 	if (id == -1)
 	{
@@ -73,7 +74,7 @@ void Unit::update(Level* level)
 	if (!path->empty() && this->isMovingAlongPath)
 	{
 		Tile* nextTile = path->front();
-		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) < movementSpeed)
+		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) <= movementSpeed)
 		{
 			currentTile = nextTile;
 			path->pop_front();
@@ -110,6 +111,7 @@ void Unit::update(Level* level)
 			this->setPosition(this->getPosition() + Ogre::Vector3(0, 0, movementSpeed));
 		}
 		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();
+		this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(this->directionMoving));
 	}
 }
 

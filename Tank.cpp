@@ -31,7 +31,6 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 void Tank::update(Level* level)
 {
 	Unit::update(level);
-	this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(this->directionMoving));
 }
 
 Tank::~Tank()

@@ -223,7 +223,10 @@ void Client::receiveMessages()
 			bool inPositionX = false;
 			bool inPositionY = false;
 			bool inPositionZ = false;
-			bool inRotation = false;
+			bool inDirectionFacing = false;
+			bool inDirectionFacingX = false;
+			bool inDirectionFacingY = false;
+			bool inDirectionFacingZ = false;
 			bool inScale = false;
 			bool inScaleX = false;
 			bool inScaleY = false;
@@ -237,7 +240,7 @@ void Client::receiveMessages()
 
 			int id = -1;
 			Ogre::Vector3 position(0,0,0);
-			Ogre::Real rotation = 0;
+			Ogre::Vector3 directionFacing(0,0,0);
 			Ogre::Vector3 scale(0,0,0);
 			Ogre::Vector3 destination(0,0,0);
 			int playerID = 0;
@@ -274,9 +277,24 @@ void Client::receiveMessages()
 					inPositionZ = true;
 					setFlag = true;
 				}
-				else if (tmp == "<Rotation")
+				else if (tmp == "<Direction")
 				{
-					inRotation = true;
+					inDirectionFacing = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inDirectionFacing)
+				{
+					inDirectionFacingX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inDirectionFacing)
+				{
+					inDirectionFacingY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Z" && inDirectionFacing)
+				{
+					inDirectionFacingZ = true;
 					setFlag = true;
 				}
 				else if (tmp == "<Scale")
@@ -353,10 +371,21 @@ void Client::receiveMessages()
 						inPositionZ = false;
 						inPosition = false;
 					}
-					else if (inRotation)
+					else if (inDirectionFacingX)
 					{
-						rotation = std::atof(tmp.substr(0, tmp.find("</Rotation")).c_str());
-						inRotation = false;
+						directionFacing.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inDirectionFacingX = false;
+					}
+					else if (inDirectionFacingY)
+					{
+						directionFacing.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inDirectionFacingY = false;
+					}
+					else if (inDirectionFacingZ)
+					{
+						directionFacing.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inDirectionFacingZ = false;
+						inDirectionFacing = false;
 					}
 					else if (inScaleX)
 					{
@@ -409,7 +438,7 @@ void Client::receiveMessages()
 				data.id = id;
 				data.playerID = playerID;
 				data.position = position;
-				data.rotation = rotation;
+				data.directionFacing = directionFacing;
 				data.type = type;
 
 				unitsToCreateLock.lock();
@@ -434,7 +463,10 @@ void Client::receiveMessages()
 			bool inPositionX = false;
 			bool inPositionY = false;
 			bool inPositionZ = false;
-			bool inRotation = false;
+			bool inDirectionFacing = false;
+			bool inDirectionFacingX = false;
+			bool inDirectionFacingY = false;
+			bool inDirectionFacingZ = false;
 			bool inScale = false;
 			bool inScaleX = false;
 			bool inScaleY = false;
@@ -448,7 +480,7 @@ void Client::receiveMessages()
 
 			int id = -1;
 			Ogre::Vector3 position(0, 0, 0);
-			Ogre::Real rotation = 0;
+			Ogre::Vector3 directionFacing(0, 0, 0);
 			Ogre::Vector3 scale(0, 0, 0);
 			Ogre::Vector3 destination(0, 0, 0);
 			int playerID = 0;
@@ -485,9 +517,24 @@ void Client::receiveMessages()
 					inPositionZ = true;
 					setFlag = true;
 				}
-				else if (tmp == "<Rotation")
+				else if (tmp == "<Direction")
 				{
-					inRotation = true;
+					inDirectionFacing = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inDirectionFacing)
+				{
+					inDirectionFacingX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inDirectionFacing)
+				{
+					inDirectionFacingY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Z" && inDirectionFacing)
+				{
+					inDirectionFacingZ = true;
 					setFlag = true;
 				}
 				else if (tmp == "<Scale")
@@ -564,10 +611,21 @@ void Client::receiveMessages()
 						inPositionZ = false;
 						inPosition = false;
 					}
-					else if (inRotation)
+					else if (inDirectionFacingX)
 					{
-						rotation = std::atof(tmp.substr(0, tmp.find("</Rotation")).c_str());
-						inRotation = false;
+						directionFacing.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inDirectionFacingX = false;
+					}
+					else if (inDirectionFacingY)
+					{
+						directionFacing.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inDirectionFacingY = false;
+					}
+					else if (inDirectionFacingZ)
+					{
+						directionFacing.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inDirectionFacingZ = false;
+						inDirectionFacing = false;
 					}
 					else if (inScaleX)
 					{
@@ -620,7 +678,7 @@ void Client::receiveMessages()
 				data.id = id;
 				data.playerID = playerID;
 				data.position = position;
-				data.rotation = rotation;
+				data.directionFacing = directionFacing;
 				data.type = type;
 
 				unitsToUpdateLock.lock();
@@ -645,7 +703,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		if (unit.type == UNIT_TANK)
 		{
 			Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-			tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
+			tank->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
 			if (clientMode == CLIENT_MODE_PASSIVE)
 			{
 				tank->setVisible(false);
@@ -669,7 +727,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			{
 				realUnit->setPosition(unit.position);
 				realUnit->setPlayerControlledBy(unit.playerID);
-				realUnit->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
+				realUnit->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
 				foundUnitToUpdate = true;
 				break;
 			}
@@ -679,7 +737,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			if (unit.type == UNIT_TANK)
 			{
 				Tank* tank = new Tank(unit.position, sceneManager, unit.playerID, unit.id);
-				tank->setOrientation(Quaternion(Ogre::Radian(Ogre::Degree(unit.rotation)), Ogre::Vector3::UNIT_Y));
+				tank->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
 				//tank->setRotation(Ogre::Degree(unit.rotation));
 				if (clientMode == CLIENT_MODE_PASSIVE)
 				{

@@ -210,9 +210,13 @@ void Server::setUpdateAboutUnit(Unit* unit)
 	message += std::to_string(unit->getPosition().y);
 	message += "</Y><Z>";
 	message += std::to_string(unit->getPosition().z);
-	message += "</Z></Position><Rotation>";
-	message += std::to_string(Ogre::Degree(Ogre::Vector3::UNIT_Z.angleBetween(facingDirection)).valueDegrees());
-	message += "</Rotation><Scale><X>";
+	message += "</Z></Position><Direction><X>";
+	message += std::to_string(facingDirection.x);
+	message += "</X><Y>";
+	message += std::to_string(facingDirection.y);
+	message += "</Y><Z>";
+	message += std::to_string(facingDirection.z);
+	message += "</Z></Direction><Scale><X>";
 	message += std::to_string(unit->getScale().x);
 	message += "</X><Y>";
 	message += std::to_string(unit->getScale().y);
@@ -245,7 +249,7 @@ void Server::sendUnitToClients(Unit* unit)
 {
 	//printf("Sending unit to clients");
 	char sendBuffer[1024];
-	Ogre::Vector3 facingDirection = unit->getOrientation() * Ogre::Vector3::UNIT_Z;;
+	Ogre::Vector3 facingDirection = unit->getDirectionMoving();
 	sendBuffer[0] = 0x01;
 	std::string message = "<ID>" + std::to_string(unit->getUnitID());
 	message += "</ID><Position><X>";
@@ -254,9 +258,13 @@ void Server::sendUnitToClients(Unit* unit)
 	message += std::to_string(unit->getPosition().y);
 	message += "</Y><Z>";
 	message += std::to_string(unit->getPosition().z);
-	message += "</Z></Position><Rotation>";
-	message += std::to_string(Ogre::Degree(-facingDirection.angleBetween(Ogre::Vector3::UNIT_Z)).valueDegrees());
-	message += "</Rotation><Scale><X>";
+	message += "</Z></Position><Direction><X>";
+	message += std::to_string(facingDirection.x);
+	message += "</X><Y>";
+	message += std::to_string(facingDirection.y);
+	message += "</Y><Z>";
+	message += std::to_string(facingDirection.z);
+	message += "</Z></Direction><Scale><X>";
 	message += std::to_string(unit->getScale().x);
 	message += "</X><Y>";
 	message += std::to_string(unit->getScale().y);
