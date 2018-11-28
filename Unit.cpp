@@ -110,7 +110,7 @@ void Unit::update(Level* level)
 			// move down
 			this->setPosition(this->getPosition() + Ogre::Vector3(0, 0, movementSpeed));
 		}
-		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();
+		directionMoving = nextTile->getPosition() - this->currentTile->getPosition();//this->getPosition();//this->currentTile->getPosition();
 		this->node->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(this->directionMoving));
 	}
 }
