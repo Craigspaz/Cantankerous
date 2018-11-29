@@ -302,3 +302,66 @@ void Server::addUnit(Unit* unit)
 	this->units->push_back(unit);
 	sendUnitToClients(unit);
 }
+
+
+void Server::sendBuildingToClient(Building* building)
+{
+	char sendBuffer[1024];
+	sendBuffer[0] = 0x04;
+	std::string message = "<ID>" + std::to_string(building->getID());
+	message += "</ID><Position><X>";
+	message += std::to_string(building->getPosition().x);
+	message += "</X><Y>";
+	message += std::to_string(building->getPosition().y);
+	message += "</Y><Z>";
+	message += std::to_string(building->getPosition().z);
+	message += "</Z></Position><PlayerID>";
+	message += std::to_string(building->getControllingPlayerID());
+	message += "</PlayerID><Type>";
+	message += std::to_string(building->getType());
+	message += "</Type>";
+
+	short length = message.length();
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
+}
+
+void Server::sendBuildingUpdateToClient(Building* building)
+{
+	char sendBuffer[1024];
+	sendBuffer[0] = 0x05;
+	std::string message = "<ID>" + std::to_string(building->getID());
+	message += "</ID><Position><X>";
+	message += std::to_string(building->getPosition().x);
+	message += "</X><Y>";
+	message += std::to_string(building->getPosition().y);
+	message += "</Y><Z>";
+	message += std::to_string(building->getPosition().z);
+	message += "</Z></Position><PlayerID>";
+	message += std::to_string(building->getControllingPlayerID());
+	message += "</PlayerID><Type>";
+	message += std::to_string(building->getType());
+	message += "</Type>";
+
+	short length = message.length();
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
+}

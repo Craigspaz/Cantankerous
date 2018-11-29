@@ -45,6 +45,22 @@ private:
 		int type;
 	};
 
+	struct BuildingsToCreateData
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		int playerID;
+		int type;
+	};
+
+	struct BuildingsToUpdateData
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		int playerID;
+		int type;
+	};
+
 	std::vector<UnitsToCreateData>* unitsToCreate;
 	std::mutex unitsToCreateLock;
 
@@ -66,6 +82,17 @@ private:
 	std::vector<UnitsToUpdate>* unitsToUpdate;
 
 	Unit* selectedUnit;
+
+	std::vector<Building*>* localCopyOfBuildings;
+	std::mutex buildingsLock;
+
+	Building* selectedBuilding;
+
+	std::vector<BuildingsToCreateData>* buildingsToCreate;
+	std::mutex buildingsToCreateLock;
+
+	std::vector<BuildingsToUpdateData>* buildingsToUpdate;
+	std::mutex buildingsToUpdateLock;
 
 };
 

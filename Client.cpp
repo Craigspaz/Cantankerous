@@ -8,6 +8,9 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	localCopyOfUnits = new std::vector<Unit*>();
 	unitsToCreate = new std::vector<UnitsToCreateData>();
 	unitsToUpdate = new std::vector<UnitsToUpdate>();
+	localCopyOfBuildings = new std::vector<Building*>();
+	buildingsToCreate = new std::vector<BuildingsToCreateData>();
+	buildingsToUpdate = new std::vector<BuildingsToUpdateData>();
 	this->sceneManager = sceneManager;
 	this->game = game;
 	this->selectedUnit = NULL;
@@ -179,6 +182,16 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							}
 						}
 						unitsLock.unlock();
+						buildingsLock.lock();
+						for (auto building : *localCopyOfBuildings)
+						{
+							if (building->getEntity() == res)
+							{
+								selectedBuilding = building;
+								break;
+							}
+						}
+						buildingsLock.unlock();
 						if (selectedUnit != NULL)
 						{
 							Tile* endTile = NULL;
@@ -691,6 +704,216 @@ void Client::receiveMessages()
 				unitsLock.unlock();*/
 				//printf("Received and processed unit update message\n");
 			}
+		}
+		else if (buffer[0] == 0x03)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
+			char* token = strtok(tmpStart, ">");
+			bool inID = false;
+			bool inPosition = false;
+			bool inPositionX = false;
+			bool inPositionY = false;
+			bool inPositionZ = false;
+			bool inPlayerID = false;
+			bool inType = false;
+
+			int id = -1;
+			Ogre::Vector3 position(0,0,0);
+			int playerID = -1;
+			int type = -1;
+
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Position")
+				{
+					inPosition = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inPosition)
+				{
+					inPositionX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inPosition)
+				{
+					inPositionY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Z" && inPosition)
+				{
+					inPositionZ = true;
+					setFlag = true;
+				}
+				else if (tmp == "<PlayerID")
+				{
+					inPlayerID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Type")
+				{
+					inType = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inPositionX)
+					{
+						position.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inPositionX = false;
+					}
+					else if (inPositionY)
+					{
+						position.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inPositionY = false;
+					}
+					else if (inPositionZ)
+					{
+						position.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inPositionZ = false;
+					}
+					else if (inPlayerID)
+					{
+						playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+						inPlayerID = false;
+					}
+					else if (inType)
+					{
+						type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
+						inType = false;
+					}
+				}
+
+				BuildingsToCreateData data;
+				data.id = id;
+				data.playerID = playerID;
+				data.position = position;
+				data.type = type;
+
+				buildingsToCreateLock.lock();
+				buildingsToCreate->push_back(data);
+				buildingsToCreateLock.unlock();
+
+				token = strtok(NULL, ">");
+			}
+		}
+		else if (buffer[0] == 0x04)
+		{
+		buffer[bytesReceived] = '\0';
+		char* tmpStart = buffer + 3;
+		char* token = strtok(tmpStart, ">");
+		bool inID = false;
+		bool inPosition = false;
+		bool inPositionX = false;
+		bool inPositionY = false;
+		bool inPositionZ = false;
+		bool inPlayerID = false;
+		bool inType = false;
+
+		int id = -1;
+		Ogre::Vector3 position(0, 0, 0);
+		int playerID = -1;
+		int type = -1;
+
+		while (token != NULL)
+		{
+			std::string tmp = token;
+			bool setFlag = false;
+			if (tmp == "<ID")
+			{
+				inID = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Position")
+			{
+				inPosition = true;
+				setFlag = true;
+			}
+			else if (tmp == "<X" && inPosition)
+			{
+				inPositionX = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Y" && inPosition)
+			{
+				inPositionY = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Z" && inPosition)
+			{
+				inPositionZ = true;
+				setFlag = true;
+			}
+			else if (tmp == "<PlayerID")
+			{
+				inPlayerID = true;
+				setFlag = true;
+			}
+			else if (tmp == "<Type")
+			{
+				inType = true;
+				setFlag = true;
+			}
+
+			if (!setFlag)
+			{
+				if (inID)
+				{
+					id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+					inID = false;
+				}
+				else if (inPositionX)
+				{
+					position.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+					inPositionX = false;
+				}
+				else if (inPositionY)
+				{
+					position.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+					inPositionY = false;
+				}
+				else if (inPositionZ)
+				{
+					position.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+					inPositionZ = false;
+				}
+				else if (inPlayerID)
+				{
+					playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+					inPlayerID = false;
+				}
+				else if (inType)
+				{
+					type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
+					inType = false;
+				}
+			}
+
+			BuildingsToUpdateData data;
+			data.id = id;
+			data.playerID = playerID;
+			data.position = position;
+			data.type = type;
+
+			buildingsToUpdateLock.lock();
+			buildingsToUpdate->push_back(data);
+			buildingsToUpdateLock.unlock();
+
+			token = strtok(NULL, ">");
+		}
 		}
 	}
 }
