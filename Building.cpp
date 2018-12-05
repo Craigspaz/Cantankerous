@@ -57,3 +57,14 @@ int Building::getID()
 {
 	return this->id;
 }
+
+void Building::setVisible(bool value)
+{
+	this->node->setVisible(value);
+}
+
+
+void Building::setPosition(Ogre::Vector3 pos)
+{
+	this->node->setPosition(pos);
+}

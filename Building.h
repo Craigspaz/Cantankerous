@@ -17,6 +17,8 @@ public:
 	int getControllingPlayerID();
 	int getType();
 	int getID();
+	void setVisible(bool value);
+	void setPosition(Ogre::Vector3 pos);
 
 private:
 	Ogre::Entity* entity;

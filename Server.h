@@ -24,12 +24,11 @@ public:
 private:
 
 	void sendUnitToClients(Unit* unit);
-	void setUpdateAboutUnit(Unit* unit);
 
 	void sendBuildingToClient(Building* building);
-	void sendBuildingUpdateToClient(Building* building);
 
 	void addUnit(Unit* unit);
+	void addBuilding(Building* building);
 
 	std::vector<SOCKET>* sockets;
 
