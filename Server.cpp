@@ -96,7 +96,7 @@ void Server::waitForMessages(SOCKET sock)
 		int bytesReceived = Messages::receiveMessage(sock, buffer, 1024);
 		if (bytesReceived == 0)
 		{
-			return;
+			continue;
 		}
 		if (bytesReceived == 3 && buffer[0] == 0x09 && buffer[1] == 0x00 && buffer[2] == 0x00)
 		{
