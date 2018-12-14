@@ -26,7 +26,7 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 	{
 		this->id = id;
 	}
-	selectionNode = NULL;
+	alreadySelected = false;
 }
 
 
@@ -70,32 +70,22 @@ void Building::setPosition(Ogre::Vector3 pos)
 	this->node->setPosition(pos);
 }
 
-void Building::setSelected(bool value)
+void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 {
-	static Ogre::Entity* entity = NULL;
-	if (value == true && selectionNode == NULL)
+	if (value == true)
 	{
-		selectionNode = this->node->createChildSceneNode();
-		selectionNode->setPosition(Ogre::Vector3(550, 40, 50));
-		if (entity == NULL)
+		if (!alreadySelected)
 		{
-			entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
-			selectionNode->attachObject(entity);
-			entity->setVisible(true);
-			selectionNode->setScale(selectionNode->getScale() / 50.0);
+			trayManager->createButton(OgreBites::TL_BOTTOM, "Tank", "Spawn Tank");
 		}
+		alreadySelected = true;
 	}
 	else
 	{
-		if (selectionNode == NULL)
+		if (alreadySelected)
 		{
-			return;
+			alreadySelected = false;
+			trayManager->destroyAllWidgets();
 		}
-		entity->setVisible(false);
-		selectionNode->detachAllObjects();
-		this->sceneManager->destroyEntity(entity);
-		entity = NULL;
-		selectionNode->removeAndDestroyAllChildren();
-		selectionNode = NULL;
 	}
 }

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "Game.h"
 
-Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager)
+Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager, OgreBites::TrayManager* trayManager)
 {
 	localCopyOfUnits = new std::vector<Unit*>();
 	unitsToUpdate = new std::vector<UnitsToUpdate>();
@@ -39,6 +39,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	getInitialInfo();
 	selectedBuilding = NULL;
 	selectedUnit = NULL;
+	this->trayManager = trayManager;
 }
 
 void Client::getInitialInfo()
@@ -176,7 +177,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 									}
 									if (selectedBuilding != NULL)
 									{
-										selectedBuilding->setSelected(false);
+										selectedBuilding->setSelected(false, trayManager);
 										selectedBuilding = NULL;
 									}
 									tank->setSelected(true);
@@ -195,14 +196,14 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								std::cout << "Clicked on a building" << std::endl;
 								if (selectedBuilding != NULL)
 								{
-									selectedBuilding->setSelected(false);
+									selectedBuilding->setSelected(false, trayManager);
 								}
 								if (selectedUnit != NULL)
 								{
 									selectedUnit->setSelected(false);
 									selectedUnit = NULL;
 								}
-								building->setSelected(true);
+								building->setSelected(true, trayManager);
 								selectedBuilding = building;
 								buildingsLock.unlock();
 								return;
@@ -241,7 +242,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 			if (selectedBuilding != NULL)
 			{
 				std::cout << "Deselecting building" << std::endl;
-				selectedBuilding->setSelected(false);
+				selectedBuilding->setSelected(false, trayManager);
 				selectedBuilding = NULL;
 			}
 		}

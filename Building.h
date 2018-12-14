@@ -5,6 +5,8 @@
 #include <string>
 #include "SystemDefines.h"
 #include <Ogre.h>
+#include <OgreTrays.h>
+#include <OgreAdvancedRenderControls.h>
 
 class Building
 {
@@ -19,7 +21,7 @@ public:
 	int getID();
 	void setVisible(bool value);
 	void setPosition(Ogre::Vector3 pos);
-	void setSelected(bool value);
+	void setSelected(bool value, OgreBites::TrayManager* trayManager);
 
 private:
 	Ogre::Entity* entity;
@@ -27,8 +29,8 @@ private:
 	int controlledByPlayerNumber;
 	int type;
 	Ogre::SceneNode* node;
-	Ogre::SceneNode* selectionNode;
 	int id;
+	bool alreadySelected;
 };
 
 #endif

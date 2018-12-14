@@ -20,7 +20,7 @@ class Game;
 class Client
 {
 public:
-	Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager);
+	Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager, OgreBites::TrayManager* trayManager);
 	~Client();
 	void handleClick(Ogre::Camera* camera, Ogre::Vector3 cameraPosition, OgreBites::MouseButtonEvent event, Ogre::Vector3 direction);
 	void update(Ogre::SceneNode* cameraNode, int clientMode);
@@ -71,6 +71,8 @@ private:
 
 	std::vector<BuildingsToUpdateData>* buildingsToUpdate;
 	std::mutex buildingsToUpdateLock;
+
+	OgreBites::TrayManager* trayManager;
 
 };
 

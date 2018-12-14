@@ -138,7 +138,7 @@ void Game::joinGame()
 {
 	OgreBites::TextBox* box = (OgreBites::TextBox*)trayManager->getWidget("IP Address");
 	std::cout << box->getText() << std::endl;
-	client = new Client(box->getText(), 1234, this, sceneManager);
+	client = new Client(box->getText(), 1234, this, sceneManager, trayManager);
 	trayManager->destroyAllWidgets();
 	gameMode = 1;
 }
@@ -162,7 +162,7 @@ void Game::buttonHit(Button* button)
 		//createServerThread.detach();
 		server = new Server(this, sceneManager);
 		clientIP = "127.0.0.1";
-		client = new Client(clientIP, 1234, this, sceneManager);
+		client = new Client(clientIP, 1234, this, sceneManager, trayManager);
 		//std::thread createClientThread(&Game::createClient, this);
 		//createClientThread.detach();
 		gameMode = 2;
@@ -197,7 +197,7 @@ void Game::createServer()
 
 void Game::createClient()
 {
-	client = new Client(clientIP, 1234, this, sceneManager);
+	client = new Client(clientIP, 1234, this, sceneManager, trayManager);
 }
 
 
