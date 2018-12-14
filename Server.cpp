@@ -27,7 +27,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
 	addUnit(tank);
 	Building* building = new Building(Ogre::Vector3(0, 20, 0), this->sceneManager, 1, BUILDING_CONSTRUCTOR);
-	buildings->push_back(building);
+	addBuilding(building);
 	
 }
 
@@ -53,7 +53,7 @@ void Server::update()
 		}
 
 		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
-		setUpdateAboutUnit(unit);
+		this->sendUnitToClients(unit);
 	}
 	unitsLock.unlock();
 
@@ -64,6 +64,13 @@ void Server::update()
 	}
 	pathFindingQueue->clear();
 	pathFindingLock.unlock();
+
+	buildingsLock.lock();
+	for (auto building : *buildings)
+	{
+		this->sendBuildingToClient(building);
+	}
+	buildingsLock.unlock();
 
 }
 
@@ -89,7 +96,7 @@ void Server::waitForMessages(SOCKET sock)
 		int bytesReceived = Messages::receiveMessage(sock, buffer, 1024);
 		if (bytesReceived == 0)
 		{
-			return;
+			continue;
 		}
 		if (bytesReceived == 3 && buffer[0] == 0x09 && buffer[1] == 0x00 && buffer[2] == 0x00)
 		{
@@ -200,55 +207,6 @@ void Server::waitForMessages(SOCKET sock)
 	}
 }
 
-
-void Server::setUpdateAboutUnit(Unit* unit)
-{
-	//printf("Sending unit update to clients");
-	char sendBuffer[1024];
-	Ogre::Vector3 facingDirection = unit->getDirectionMoving();
-	sendBuffer[0] = 0x02;
-	std::string message = "<ID>" + std::to_string(unit->getUnitID());
-	message += "</ID><Position><X>";
-	message += std::to_string(unit->getPosition().x);
-	message += "</X><Y>";
-	message += std::to_string(unit->getPosition().y);
-	message += "</Y><Z>";
-	message += std::to_string(unit->getPosition().z);
-	message += "</Z></Position><Direction><X>";
-	message += std::to_string(facingDirection.x);
-	message += "</X><Y>";
-	message += std::to_string(facingDirection.y);
-	message += "</Y><Z>";
-	message += std::to_string(facingDirection.z);
-	message += "</Z></Direction><Scale><X>";
-	message += std::to_string(unit->getScale().x);
-	message += "</X><Y>";
-	message += std::to_string(unit->getScale().y);
-	message += "</Y><Z>";
-	message += std::to_string(unit->getScale().z);
-	message += "</Z></Scale>";
-	message += "<PlayerID>";
-	message += std::to_string(unit->getPlayerControlledBy());
-	message += "</PlayerID><Type>";
-	message += std::to_string(unit->getType());
-	message += "</Type>";
-
-	short length = message.length();
-	sendBuffer[1] = length & 0xFF00;
-	sendBuffer[2] = length & 0x00FF;
-	short i = 0;
-	for (i = 0; i < length; i++)
-	{
-		sendBuffer[i + 3] = message.at(i);
-	}
-	for (auto s : *sockets)
-	{
-		Messages::sendMessage(s, sendBuffer, length + 3);
-	}
-	//printf("Sent unit update message");
-}
-
-
 void Server::sendUnitToClients(Unit* unit)
 {
 	//printf("Sending unit to clients");
@@ -281,9 +239,10 @@ void Server::sendUnitToClients(Unit* unit)
 	message += std::to_string(unit->getType());
 	message += "</Type>";
 
-	short length = message.length();
+	unsigned short length = message.length();
 	sendBuffer[1] = length & 0xFF00;
 	sendBuffer[2] = length & 0x00FF;
+	//std::cout << "Length of message to send: " << length << std::endl;
 	short i = 0;
 	for (i = 0; i < length; i++)
 	{
@@ -301,4 +260,44 @@ void Server::addUnit(Unit* unit)
 {
 	this->units->push_back(unit);
 	sendUnitToClients(unit);
+}
+
+void Server::addBuilding(Building* building)
+{
+	this->buildings->push_back(building);
+	this->sendBuildingToClient(building);
+}
+
+
+void Server::sendBuildingToClient(Building* building)
+{
+	//std::cout << "Sending building to clients: " << building->getPosition() << std::endl;
+	char sendBuffer[1024];
+	sendBuffer[0] = 0x02;
+	std::string message = "<ID>" + std::to_string(building->getID());
+	message += "</ID><Position><X>";
+	message += std::to_string(building->getPosition().x);
+	message += "</X><Y>";
+	message += std::to_string(building->getPosition().y);
+	message += "</Y><Z>";
+	message += std::to_string(building->getPosition().z);
+	message += "</Z></Position><PlayerID>";
+	message += std::to_string(building->getControllingPlayerID());
+	message += "</PlayerID><Type>";
+	message += std::to_string(building->getType());
+	message += "</Type>";
+
+	unsigned short length = message.length();
+	//std::cout << "Length of message to send: " << length << std::endl;
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
 }

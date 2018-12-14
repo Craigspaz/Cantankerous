@@ -1,0 +1,13 @@
+material CraigDirt/DirtFloor
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture craigDirt.png
+			}
+		}
+	}
+}

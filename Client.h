@@ -27,14 +27,6 @@ public:
 	Unit* checkIfRayIntersectsWithUnits(Ogre::Ray);
 
 private:
-	struct UnitsToCreateData
-	{
-		int id = -1;
-		Ogre::Vector3 position;
-		Ogre::Vector3 directionFacing;
-		int playerID;
-		int type;
-	};
 
 	struct UnitsToUpdate
 	{
@@ -45,8 +37,13 @@ private:
 		int type;
 	};
 
-	std::vector<UnitsToCreateData>* unitsToCreate;
-	std::mutex unitsToCreateLock;
+	struct BuildingsToUpdateData
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		int playerID;
+		int type;
+	};
 
 	void processInitialMessage(char* message);
 	void getInitialInfo();
@@ -66,6 +63,14 @@ private:
 	std::vector<UnitsToUpdate>* unitsToUpdate;
 
 	Unit* selectedUnit;
+
+	std::vector<Building*>* localCopyOfBuildings;
+	std::mutex buildingsLock;
+
+	Building* selectedBuilding;
+
+	std::vector<BuildingsToUpdateData>* buildingsToUpdate;
+	std::mutex buildingsToUpdateLock;
 
 };
 

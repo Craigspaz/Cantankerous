@@ -1,8 +1,14 @@
 #include "Building.h"
 
+int generateID() // return a unique name
+{
+	static int count = 0;	// keep counting the number of objects
+	count++;
+	return count;	// append the current count onto the string
+}
 
 
-Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type)
+Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type, int id)
 {
 	this->sceneManager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
@@ -12,6 +18,14 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 	this->entity = sceneManager->createEntity("tudorhouse.mesh");
 	node->attachObject(entity);
 	node->setScale(node->getScale() / 40.0);
+	if (id == -1)
+	{
+		this->id = generateID();
+	}
+	else
+	{
+		this->id = id;
+	}
 }
 
 
@@ -37,4 +51,20 @@ int Building::getControllingPlayerID()
 int Building::getType()
 {
 	return this->type;
+}
+
+int Building::getID()
+{
+	return this->id;
+}
+
+void Building::setVisible(bool value)
+{
+	this->node->setVisible(value);
+}
+
+
+void Building::setPosition(Ogre::Vector3 pos)
+{
+	this->node->setPosition(pos);
 }
