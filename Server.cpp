@@ -239,9 +239,10 @@ void Server::sendUnitToClients(Unit* unit)
 	message += std::to_string(unit->getType());
 	message += "</Type>";
 
-	short length = message.length();
+	unsigned short length = message.length();
 	sendBuffer[1] = length & 0xFF00;
 	sendBuffer[2] = length & 0x00FF;
+	//std::cout << "Length of message to send: " << length << std::endl;
 	short i = 0;
 	for (i = 0; i < length; i++)
 	{
@@ -285,7 +286,8 @@ void Server::sendBuildingToClient(Building* building)
 	message += std::to_string(building->getType());
 	message += "</Type>";
 
-	short length = message.length();
+	unsigned short length = message.length();
+	//std::cout << "Length of message to send: " << length << std::endl;
 	sendBuffer[1] = length & 0xFF00;
 	sendBuffer[2] = length & 0x00FF;
 	short i = 0;
