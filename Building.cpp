@@ -72,13 +72,18 @@ void Building::setPosition(Ogre::Vector3 pos)
 
 void Building::setSelected(bool value)
 {
+	static Ogre::Entity* entity = NULL;
 	if (value == true && selectionNode == NULL)
 	{
-		Ogre::SceneNode* selectNode = this->node->createChildSceneNode();
-		selectNode->setPosition(Ogre::Vector3(0, 20, 0));
-		Ogre::Entity* entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
-		selectNode->attachObject(entity);
-		selectNode->setScale(selectNode->getScale() / 30.0);
+		selectionNode = this->node->createChildSceneNode();
+		selectionNode->setPosition(Ogre::Vector3(550, 40, 50));
+		if (entity == NULL)
+		{
+			entity = this->sceneManager->createEntity(Ogre::SceneManager::PT_CUBE);
+			selectionNode->attachObject(entity);
+			entity->setVisible(true);
+			selectionNode->setScale(selectionNode->getScale() / 50.0);
+		}
 	}
 	else
 	{
@@ -86,6 +91,10 @@ void Building::setSelected(bool value)
 		{
 			return;
 		}
+		entity->setVisible(false);
+		selectionNode->detachAllObjects();
+		this->sceneManager->destroyEntity(entity);
+		entity = NULL;
 		selectionNode->removeAndDestroyAllChildren();
 		selectionNode = NULL;
 	}

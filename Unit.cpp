@@ -394,13 +394,18 @@ Ogre::Vector3 Unit::getDirectionMoving()
 
 void Unit::setSelected(bool value)
 {
+	static Ogre::Entity* entity = NULL;
 	if (value == true && selectionNode == NULL)
 	{
-		Ogre::SceneNode* selectNode = this->node->createChildSceneNode();
-		selectNode->setPosition(Ogre::Vector3(0, 20, 0));
-		Ogre::Entity* entity = this->manager->createEntity(Ogre::SceneManager::PT_CUBE);
-		selectNode->attachObject(entity);
-		selectNode->setScale(selectNode->getScale() / 50.0);
+		selectionNode = this->node->createChildSceneNode();
+		selectionNode->setPosition(Ogre::Vector3(0, 20, 0));
+		if (entity == NULL)
+		{
+			entity = this->manager->createEntity(Ogre::SceneManager::PT_CUBE);
+			selectionNode->attachObject(entity);
+			entity->setVisible(true);
+			selectionNode->setScale(selectionNode->getScale() / 50.0);
+		}
 	}
 	else
 	{
@@ -408,6 +413,10 @@ void Unit::setSelected(bool value)
 		{
 			return;
 		}
+		entity->setVisible(false);
+		selectionNode->detachAllObjects();
+		this->manager->destroyEntity(entity);
+		entity = NULL;
 		selectionNode->removeAndDestroyAllChildren();
 		selectionNode = NULL;
 	}

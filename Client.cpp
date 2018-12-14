@@ -229,6 +229,22 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 				}
 			}
 		}
+		else if (event.button == BUTTON_RIGHT)
+		{
+			std::cout << "Deselecting..." << std::endl;
+			if (selectedUnit != NULL)
+			{
+				std::cout << "Deselecting unit" << std::endl;
+				selectedUnit->setSelected(false);
+				selectedUnit = NULL;
+			}
+			if (selectedBuilding != NULL)
+			{
+				std::cout << "Deselecting building" << std::endl;
+				selectedBuilding->setSelected(false);
+				selectedBuilding = NULL;
+			}
+		}
 	}
 }
 
