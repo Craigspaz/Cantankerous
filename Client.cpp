@@ -620,6 +620,12 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			if (b->getID() == building.id)
 			{
 				// update building
+
+				// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
+				if (building.position.y == 0) 
+				{
+					break;
+				}
 				b->setPosition(building.position);
 				foundBuilding = true;
 				break;
@@ -629,6 +635,11 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 
 		if (!foundBuilding)
 		{
+			// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
+			if (building.position.y == 0)
+			{
+				break;
+			}
 			//std::cout << "Building added: " << building.position << std::endl;
 			Building* build = new Building(building.position, this->sceneManager, building.playerID, building.type, building.id);
 			//build->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));

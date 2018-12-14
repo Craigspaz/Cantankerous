@@ -271,6 +271,7 @@ void Server::addBuilding(Building* building)
 
 void Server::sendBuildingToClient(Building* building)
 {
+	//std::cout << "Sending building to clients: " << building->getPosition() << std::endl;
 	char sendBuffer[1024];
 	sendBuffer[0] = 0x02;
 	std::string message = "<ID>" + std::to_string(building->getID());
