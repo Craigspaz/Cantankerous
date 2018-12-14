@@ -37,6 +37,8 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	//messageRecievingThread = new std::thread(&Client::getInitialInfo, this);
 	//messageRecievingThread->detach();
 	getInitialInfo();
+	selectedBuilding = NULL;
+	selectedUnit = NULL;
 }
 
 void Client::getInitialInfo()
@@ -167,10 +169,15 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								Tank* tank = (Tank*)unit;
 								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 								{
-									//std::cout << "Clicked on tank" << std::endl;
+									std::cout << "Clicked on tank" << std::endl;
 									if (selectedUnit != NULL)
 									{
 										selectedUnit->setSelected(false);
+									}
+									if (selectedBuilding != NULL)
+									{
+										selectedBuilding->setSelected(false);
+										selectedBuilding = NULL;
 									}
 									tank->setSelected(true);
 									selectedUnit = unit;
@@ -185,8 +192,20 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						{
 							if (building->getEntity() == res)
 							{
+								std::cout << "Clicked on a building" << std::endl;
+								if (selectedBuilding != NULL)
+								{
+									selectedBuilding->setSelected(false);
+								}
+								if (selectedUnit != NULL)
+								{
+									selectedUnit->setSelected(false);
+									selectedUnit = NULL;
+								}
+								building->setSelected(true);
 								selectedBuilding = building;
-								break;
+								buildingsLock.unlock();
+								return;
 							}
 						}
 						buildingsLock.unlock();
@@ -465,6 +484,7 @@ void Client::receiveMessages()
 		}	
 		else if (buffer[0] == 0x02)
 		{
+			//std::cout << "Received building message" << std::endl;
 			buffer[bytesReceived] = '\0';
 			char* tmpStart = buffer + 3;
 			char* token = strtok(tmpStart, ">");
@@ -477,7 +497,7 @@ void Client::receiveMessages()
 			bool inType = false;
 
 			int id = -1;
-			Ogre::Vector3 position(0, 0, 0);
+			Ogre::Vector3 position(-1, -1, -1);
 			int playerID = -1;
 			int type = -1;
 
@@ -562,10 +582,12 @@ void Client::receiveMessages()
 				data.type = type;
 
 				//std::cout << "Building " << id << " position as received: " << position << std::endl;
-
-				buildingsToUpdateLock.lock();
-				buildingsToUpdate->push_back(data);
-				buildingsToUpdateLock.unlock();
+				if (position.x != -1 && position.y != -1 && position.z != -1)
+				{
+					buildingsToUpdateLock.lock();
+					buildingsToUpdate->push_back(data);
+					buildingsToUpdateLock.unlock();
+				}
 
 				token = strtok(NULL, ">");
 			}
@@ -636,7 +658,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		if (!foundBuilding)
 		{
 			// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
-			if (building.position.y == 0)
+			if (building.position.y == 0 || building.id == -1)
 			{
 				break;
 			}
@@ -645,7 +667,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			//build->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
 			if (clientMode == CLIENT_MODE_PASSIVE)
 			{
-				//build->setVisible(false);
+				build->setVisible(false);
 			}
 			buildingsLock.lock();
 			localCopyOfBuildings->push_back(build);

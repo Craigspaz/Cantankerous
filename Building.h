@@ -19,6 +19,7 @@ public:
 	int getID();
 	void setVisible(bool value);
 	void setPosition(Ogre::Vector3 pos);
+	void setSelected(bool value);
 
 private:
 	Ogre::Entity* entity;
@@ -26,6 +27,7 @@ private:
 	int controlledByPlayerNumber;
 	int type;
 	Ogre::SceneNode* node;
+	Ogre::SceneNode* selectionNode;
 	int id;
 };
 

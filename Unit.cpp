@@ -397,7 +397,7 @@ void Unit::setSelected(bool value)
 	if (value == true && selectionNode == NULL)
 	{
 		Ogre::SceneNode* selectNode = this->node->createChildSceneNode();
-		selectNode->setPosition(Ogre::Vector3(selectNode->getPosition().x, 20, selectNode->getPosition().z));
+		selectNode->setPosition(Ogre::Vector3(0, 20, 0));
 		Ogre::Entity* entity = this->manager->createEntity(Ogre::SceneManager::PT_CUBE);
 		selectNode->attachObject(entity);
 		selectNode->setScale(selectNode->getScale() / 50.0);

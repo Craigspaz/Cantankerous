@@ -296,6 +296,7 @@ void Server::sendBuildingToClient(Building* building)
 	{
 		sendBuffer[i + 3] = message.at(i);
 	}
+	//std::cout << "Building position: " << building->getPosition() << std::endl;
 	for (auto s : *sockets)
 	{
 		Messages::sendMessage(s, sendBuffer, length + 3);
