@@ -150,42 +150,52 @@ std::string Game::getCurrentLevelFileName()
 
 void Game::buttonHit(Button* button)
 {
-	// Checks the name of the button to determine what action to take
-	if (button->getName() == "Host")
+	if (gameMode == 1 || gameMode == 2)
 	{
-		trayManager->destroyAllWidgets();
-		//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-		//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
-		std::string path = "./";
-		this->setLevel(new Level(path,"testLevel2.txt", sceneManager));
-		//std::thread createServerThread(&Game::createServer, this);
-		//createServerThread.detach();
-		server = new Server(this, sceneManager);
-		clientIP = "127.0.0.1";
-		client = new Client(clientIP, 1234, this, sceneManager, trayManager);
-		//std::thread createClientThread(&Game::createClient, this);
-		//createClientThread.detach();
-		gameMode = 2;
-		std::cout << "Initialized server and host client" << std::endl;
+		if (button->getName() == "SpawnTank")
+		{
+
+		}
 	}
-	else if (button->getName() == "Join")
+	else
 	{
-		trayManager->destroyAllWidgets();
-		trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 100);
-		trayManager->createButton(TL_CENTER, "Submit", "Submit");
-		gameMode = 0;
-	}
-	else if (button->getName() == "Submit")
-	{
-		joinGame();
-	}
-	else if (button->getName() == "Resume")
-	{
-		trayManager->destroyAllWidgets();
-	}
-	else if (button->getName() == "Exit")
-	{
-		exit(0);
+		// Checks the name of the button to determine what action to take
+		if (button->getName() == "Host")
+		{
+			trayManager->destroyAllWidgets();
+			//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+			//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+			std::string path = "./";
+			this->setLevel(new Level(path, "testLevel2.txt", sceneManager));
+			//std::thread createServerThread(&Game::createServer, this);
+			//createServerThread.detach();
+			server = new Server(this, sceneManager);
+			clientIP = "127.0.0.1";
+			client = new Client(clientIP, 1234, this, sceneManager, trayManager);
+			//std::thread createClientThread(&Game::createClient, this);
+			//createClientThread.detach();
+			gameMode = 2;
+			std::cout << "Initialized server and host client" << std::endl;
+		}
+		else if (button->getName() == "Join")
+		{
+			trayManager->destroyAllWidgets();
+			trayManager->createTextBox(TL_CENTER, "IP Address", "IP Address", 400, 100);
+			trayManager->createButton(TL_CENTER, "Submit", "Submit");
+			gameMode = 0;
+		}
+		else if (button->getName() == "Submit")
+		{
+			joinGame();
+		}
+		else if (button->getName() == "Resume")
+		{
+			trayManager->destroyAllWidgets();
+		}
+		else if (button->getName() == "Exit")
+		{
+			exit(0);
+		}
 	}
 }
 

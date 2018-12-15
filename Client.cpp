@@ -109,6 +109,17 @@ Client::~Client()
 
 }
 
+
+void Client::addUnitCreationToQueue(int type)
+{
+	selectedBuildingLock.lock();
+	if (selectedBuilding != NULL)
+	{
+		selectedBuilding->addUnitToQueue(type);
+	}
+	selectedBuildingLock.unlock();
+}
+
 Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
 {
 	//TMP local test
@@ -170,18 +181,22 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								Tank* tank = (Tank*)unit;
 								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 								{
-									std::cout << "Clicked on tank" << std::endl;
+									//std::cout << "Clicked on tank" << std::endl;
+									selectedUnitLock.lock();
 									if (selectedUnit != NULL)
 									{
 										selectedUnit->setSelected(false);
 									}
+									selectedBuildingLock.lock();
 									if (selectedBuilding != NULL)
 									{
 										selectedBuilding->setSelected(false, trayManager);
 										selectedBuilding = NULL;
 									}
+									selectedBuildingLock.unlock();
 									tank->setSelected(true);
 									selectedUnit = unit;
+									selectedUnitLock.unlock();
 									unitsLock.unlock();
 									return;
 								}
@@ -194,22 +209,27 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							if (building->getEntity() == res)
 							{
 								std::cout << "Clicked on a building" << std::endl;
+								selectedBuildingLock.lock();
 								if (selectedBuilding != NULL)
 								{
 									selectedBuilding->setSelected(false, trayManager);
 								}
+								selectedUnitLock.lock();
 								if (selectedUnit != NULL)
 								{
 									selectedUnit->setSelected(false);
 									selectedUnit = NULL;
 								}
+								selectedUnitLock.unlock();
 								building->setSelected(true, trayManager);
 								selectedBuilding = building;
+								selectedBuildingLock.unlock();
 								buildingsLock.unlock();
 								return;
 							}
 						}
 						buildingsLock.unlock();
+						selectedUnitLock.lock();
 						if (selectedUnit != NULL)
 						{
 							Tile* endTile = NULL;
@@ -226,6 +246,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
 							}
 						}
+						selectedUnitLock.unlock();
 					}
 				}
 			}
@@ -233,18 +254,22 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 		else if (event.button == BUTTON_RIGHT)
 		{
 			std::cout << "Deselecting..." << std::endl;
+			selectedUnitLock.lock();
 			if (selectedUnit != NULL)
 			{
 				std::cout << "Deselecting unit" << std::endl;
 				selectedUnit->setSelected(false);
 				selectedUnit = NULL;
 			}
+			selectedUnitLock.unlock();
+			selectedBuildingLock.lock();
 			if (selectedBuilding != NULL)
 			{
 				std::cout << "Deselecting building" << std::endl;
 				selectedBuilding->setSelected(false, trayManager);
 				selectedBuilding = NULL;
 			}
+			selectedBuildingLock.unlock();
 		}
 	}
 }

@@ -76,7 +76,7 @@ void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 	{
 		if (!alreadySelected)
 		{
-			trayManager->createButton(OgreBites::TL_BOTTOM, "Tank", "Spawn Tank");
+			trayManager->createButton(OgreBites::TL_BOTTOM, "SpawnTank", "Spawn Tank");
 		}
 		alreadySelected = true;
 	}
@@ -88,4 +88,10 @@ void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 			trayManager->destroyAllWidgets();
 		}
 	}
+}
+
+
+void Building::addUnitToQueue(int type)
+{
+
 }

@@ -26,6 +26,8 @@ public:
 	void update(Ogre::SceneNode* cameraNode, int clientMode);
 	Unit* checkIfRayIntersectsWithUnits(Ogre::Ray);
 
+	void addUnitCreationToQueue(int type);
+
 private:
 
 	struct UnitsToUpdate
@@ -73,6 +75,9 @@ private:
 	std::mutex buildingsToUpdateLock;
 
 	OgreBites::TrayManager* trayManager;
+
+	std::mutex selectedUnitLock;
+	std::mutex selectedBuildingLock;
 
 };
 

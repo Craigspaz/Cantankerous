@@ -22,6 +22,7 @@ public:
 	void setVisible(bool value);
 	void setPosition(Ogre::Vector3 pos);
 	void setSelected(bool value, OgreBites::TrayManager* trayManager);
+	void addUnitToQueue(int type);
 
 private:
 	Ogre::Entity* entity;
