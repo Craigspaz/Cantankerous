@@ -11,4 +11,8 @@
 
 #define UNIT_TANK 0
 
+
+
+#define MAX_SIZE_OF_BUILD_QUEUE 9
+
 #endif

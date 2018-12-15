@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "Game.h"
 
-Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager)
+Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneManager, OgreBites::TrayManager* trayManager)
 {
 	localCopyOfUnits = new std::vector<Unit*>();
 	unitsToUpdate = new std::vector<UnitsToUpdate>();
@@ -37,6 +37,9 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	//messageRecievingThread = new std::thread(&Client::getInitialInfo, this);
 	//messageRecievingThread->detach();
 	getInitialInfo();
+	selectedBuilding = NULL;
+	selectedUnit = NULL;
+	this->trayManager = trayManager;
 }
 
 void Client::getInitialInfo()
@@ -106,6 +109,17 @@ Client::~Client()
 
 }
 
+
+void Client::addUnitCreationToQueue(int type)
+{
+	selectedBuildingLock.lock();
+	if (selectedBuilding != NULL)
+	{
+		selectedBuilding->addUnitToQueue(type);
+	}
+	selectedBuildingLock.unlock();
+}
+
 Unit* Client::checkIfRayIntersectsWithUnits(Ogre::Ray ray)
 {
 	//TMP local test
@@ -168,12 +182,21 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 								{
 									//std::cout << "Clicked on tank" << std::endl;
+									selectedUnitLock.lock();
 									if (selectedUnit != NULL)
 									{
 										selectedUnit->setSelected(false);
 									}
+									selectedBuildingLock.lock();
+									if (selectedBuilding != NULL)
+									{
+										selectedBuilding->setSelected(false, trayManager);
+										selectedBuilding = NULL;
+									}
+									selectedBuildingLock.unlock();
 									tank->setSelected(true);
 									selectedUnit = unit;
+									selectedUnitLock.unlock();
 									unitsLock.unlock();
 									return;
 								}
@@ -185,11 +208,28 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						{
 							if (building->getEntity() == res)
 							{
+								std::cout << "Clicked on a building" << std::endl;
+								selectedBuildingLock.lock();
+								if (selectedBuilding != NULL)
+								{
+									selectedBuilding->setSelected(false, trayManager);
+								}
+								selectedUnitLock.lock();
+								if (selectedUnit != NULL)
+								{
+									selectedUnit->setSelected(false);
+									selectedUnit = NULL;
+								}
+								selectedUnitLock.unlock();
+								building->setSelected(true, trayManager);
 								selectedBuilding = building;
-								break;
+								selectedBuildingLock.unlock();
+								buildingsLock.unlock();
+								return;
 							}
 						}
 						buildingsLock.unlock();
+						selectedUnitLock.lock();
 						if (selectedUnit != NULL)
 						{
 							Tile* endTile = NULL;
@@ -206,9 +246,30 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
 							}
 						}
+						selectedUnitLock.unlock();
 					}
 				}
 			}
+		}
+		else if (event.button == BUTTON_RIGHT)
+		{
+			std::cout << "Deselecting..." << std::endl;
+			selectedUnitLock.lock();
+			if (selectedUnit != NULL)
+			{
+				std::cout << "Deselecting unit" << std::endl;
+				selectedUnit->setSelected(false);
+				selectedUnit = NULL;
+			}
+			selectedUnitLock.unlock();
+			selectedBuildingLock.lock();
+			if (selectedBuilding != NULL)
+			{
+				std::cout << "Deselecting building" << std::endl;
+				selectedBuilding->setSelected(false, trayManager);
+				selectedBuilding = NULL;
+			}
+			selectedBuildingLock.unlock();
 		}
 	}
 }
@@ -465,6 +526,7 @@ void Client::receiveMessages()
 		}	
 		else if (buffer[0] == 0x02)
 		{
+			//std::cout << "Received building message" << std::endl;
 			buffer[bytesReceived] = '\0';
 			char* tmpStart = buffer + 3;
 			char* token = strtok(tmpStart, ">");
@@ -477,7 +539,7 @@ void Client::receiveMessages()
 			bool inType = false;
 
 			int id = -1;
-			Ogre::Vector3 position(0, 0, 0);
+			Ogre::Vector3 position(-1, -1, -1);
 			int playerID = -1;
 			int type = -1;
 
@@ -554,20 +616,22 @@ void Client::receiveMessages()
 						inType = false;
 					}
 				}
+				
+				token = strtok(NULL, ">");
+			}
 
-				BuildingsToUpdateData data;
-				data.id = id;
-				data.playerID = playerID;
-				data.position = position;
-				data.type = type;
+			BuildingsToUpdateData data;
+			data.id = id;
+			data.playerID = playerID;
+			data.position = position;
+			data.type = type;
 
-				//std::cout << "Building " << id << " position as received: " << position << std::endl;
-
+			//std::cout << "Building " << id << " position as received: " << position << std::endl;
+			if (position.x != -1 && position.y != -1 && position.z != -1)
+			{
 				buildingsToUpdateLock.lock();
 				buildingsToUpdate->push_back(data);
 				buildingsToUpdateLock.unlock();
-
-				token = strtok(NULL, ">");
 			}
 		}
 	}
@@ -636,7 +700,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		if (!foundBuilding)
 		{
 			// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
-			if (building.position.y == 0)
+			if (building.position.y == 0 || building.id == -1)
 			{
 				break;
 			}
@@ -645,7 +709,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			//build->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
 			if (clientMode == CLIENT_MODE_PASSIVE)
 			{
-				//build->setVisible(false);
+				build->setVisible(false);
 			}
 			buildingsLock.lock();
 			localCopyOfBuildings->push_back(build);
@@ -684,4 +748,27 @@ void Client::tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords)
 	{
 		return;
 	}
+}
+
+
+
+void Client::tellClientUserAskedToQueueUnit(int type)
+{
+	std::cout << "Sending queue up message to server" << std::endl;
+	selectedBuildingLock.lock();
+	if (selectedBuilding != NULL)
+	{
+		char sendBuffer[1024];
+		std::string message = "<Building><ID>" + std::to_string(selectedBuilding->getID()) + 
+		"</ID><ToQueue>" +
+		std::to_string(type) +
+		"</ToQueue></Building>";
+		sendBuffer[0] = 0x04;
+		sendBuffer[1] = message.length() & 0xFF00;
+		sendBuffer[2] = message.length() & 0x00FF;
+		char* tmpSendBuffer = sendBuffer + 3;
+		strncpy(tmpSendBuffer, message.c_str(), 1021);
+		int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	}
+	selectedBuildingLock.unlock();
 }

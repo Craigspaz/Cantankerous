@@ -204,6 +204,64 @@ void Server::waitForMessages(SOCKET sock)
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
 		}
+		else if (buffer[0] == 0x04)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
+			char* token = strtok(tmpStart, ">");
+
+			bool inID = false;
+			bool inToQueue = false;
+
+			int id = -1;
+			int queueID = -1;
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<ToQueue")
+				{
+					inToQueue = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inToQueue)
+					{
+						queueID = std::atoi(tmp.substr(0, tmp.find("</ToQueue")).c_str());
+						inToQueue = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+
+			if (queueID == -1)
+			{
+				continue;
+			}
+			std::cout << "Adding unit: " << queueID << " to the queue" << std::endl;
+			buildingsLock.lock();
+			for (auto building : *buildings)
+			{
+				if (building->getID() == id)
+				{
+					building->addUnitToQueue(queueID);
+					break;
+				}
+			}
+			buildingsLock.unlock();
+		}
 	}
 }
 
@@ -296,6 +354,7 @@ void Server::sendBuildingToClient(Building* building)
 	{
 		sendBuffer[i + 3] = message.at(i);
 	}
+	//std::cout << "Building position: " << building->getPosition() << std::endl;
 	for (auto s : *sockets)
 	{
 		Messages::sendMessage(s, sendBuffer, length + 3);
