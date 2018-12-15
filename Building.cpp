@@ -27,6 +27,9 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 		this->id = id;
 	}
 	alreadySelected = false;
+	buildQueue = new std::vector<int>();
+	sizeOfQueue = 0;
+	maxSizeOfBuildQueue = MAX_SIZE_OF_BUILD_QUEUE;
 }
 
 
@@ -93,5 +96,24 @@ void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 
 void Building::addUnitToQueue(int type)
 {
+	buildQueue->push_back(type);
+	sizeOfQueue++;
+}
 
+
+void Building::removeFirstItemFromQueue()
+{
+	if (sizeOfQueue > 0)
+	{
+		for (int i = 0; i < sizeOfQueue && i + 1 < sizeOfQueue; i++)
+		{
+			buildQueue[i] = buildQueue[i + 1];
+		}
+		sizeOfQueue--;
+	}
+}
+
+std::vector<int>* Building::getQueue()
+{
+	return buildQueue;
 }

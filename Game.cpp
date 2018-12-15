@@ -154,7 +154,7 @@ void Game::buttonHit(Button* button)
 	{
 		if (button->getName() == "SpawnTank")
 		{
-
+			client->tellClientUserAskedToQueueUnit(UNIT_TANK);
 		}
 	}
 	else

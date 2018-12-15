@@ -204,6 +204,48 @@ void Server::waitForMessages(SOCKET sock)
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
 		}
+		else if (buffer[0] == 0x04)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
+			char* token = strtok(tmpStart, ">");
+
+			bool inID = false;
+			bool inToQueue = false;
+
+			int id = -1;
+			int queueID = -1;
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<ToQueue")
+				{
+					inToQueue = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inToQueue)
+					{
+						queueID = std::atoi(tmp.substr(0, tmp.find("</ToQueue")).c_str());
+						inToQueue = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+		}
 	}
 }
 

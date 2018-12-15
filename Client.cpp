@@ -616,22 +616,22 @@ void Client::receiveMessages()
 						inType = false;
 					}
 				}
-
-				BuildingsToUpdateData data;
-				data.id = id;
-				data.playerID = playerID;
-				data.position = position;
-				data.type = type;
-
-				//std::cout << "Building " << id << " position as received: " << position << std::endl;
-				if (position.x != -1 && position.y != -1 && position.z != -1)
-				{
-					buildingsToUpdateLock.lock();
-					buildingsToUpdate->push_back(data);
-					buildingsToUpdateLock.unlock();
-				}
-
+				
 				token = strtok(NULL, ">");
+			}
+
+			BuildingsToUpdateData data;
+			data.id = id;
+			data.playerID = playerID;
+			data.position = position;
+			data.type = type;
+
+			//std::cout << "Building " << id << " position as received: " << position << std::endl;
+			if (position.x != -1 && position.y != -1 && position.z != -1)
+			{
+				buildingsToUpdateLock.lock();
+				buildingsToUpdate->push_back(data);
+				buildingsToUpdateLock.unlock();
 			}
 		}
 	}
@@ -748,4 +748,27 @@ void Client::tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords)
 	{
 		return;
 	}
+}
+
+
+
+void Client::tellClientUserAskedToQueueUnit(int type)
+{
+	std::cout << "Sending queue up message to server" << std::endl;
+	selectedBuildingLock.lock();
+	if (selectedBuilding != NULL)
+	{
+		char sendBuffer[1024];
+		std::string message = "<Building><ID>" + std::to_string(selectedBuilding->getID()) + 
+		"</ID><ToQueue>" +
+		std::to_string(type) +
+		"</ToQueue></Building>";
+		sendBuffer[0] = 0x04;
+		sendBuffer[1] = message.length() & 0xFF00;
+		sendBuffer[2] = message.length() & 0x00FF;
+		char* tmpSendBuffer = sendBuffer + 3;
+		strncpy(tmpSendBuffer, message.c_str(), 1021);
+		int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	}
+	selectedBuildingLock.unlock();
 }

@@ -23,6 +23,8 @@ public:
 	void setPosition(Ogre::Vector3 pos);
 	void setSelected(bool value, OgreBites::TrayManager* trayManager);
 	void addUnitToQueue(int type);
+	void removeFirstItemFromQueue();
+	std::vector<int>* getQueue();
 
 private:
 	Ogre::Entity* entity;
@@ -32,6 +34,10 @@ private:
 	Ogre::SceneNode* node;
 	int id;
 	bool alreadySelected;
+
+	std::vector<int>* buildQueue;
+	int sizeOfQueue;
+	int maxSizeOfBuildQueue;
 };
 
 #endif

@@ -27,6 +27,7 @@ public:
 	Unit* checkIfRayIntersectsWithUnits(Ogre::Ray);
 
 	void addUnitCreationToQueue(int type);
+	void tellClientUserAskedToQueueUnit(int type);
 
 private:
 
