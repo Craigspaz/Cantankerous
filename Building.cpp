@@ -96,13 +96,19 @@ void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 
 void Building::addUnitToQueue(int type)
 {
-	buildQueue->push_back(type);
-	sizeOfQueue++;
+	buildQueueLock.lock();
+	if (sizeOfQueue + 1 > maxSizeOfBuildQueue)
+	{
+		buildQueue->push_back(type);
+		sizeOfQueue++;
+	}
+	buildQueueLock.unlock();
 }
 
 
 void Building::removeFirstItemFromQueue()
 {
+	buildQueueLock.lock();
 	if (sizeOfQueue > 0)
 	{
 		for (int i = 0; i < sizeOfQueue && i + 1 < sizeOfQueue; i++)
@@ -111,9 +117,33 @@ void Building::removeFirstItemFromQueue()
 		}
 		sizeOfQueue--;
 	}
+	buildQueueLock.unlock();
 }
 
 std::vector<int>* Building::getQueue()
 {
 	return buildQueue;
+}
+
+
+int Building::getCurrentSizeOfQueue()
+{
+	buildQueueLock.lock();
+	int size = sizeOfQueue;
+	buildQueueLock.unlock();
+	return size;
+}
+
+
+void Building::setQueue(std::vector<int> queue)
+{
+	buildQueueLock.lock();
+	buildQueue->clear();
+	sizeOfQueue = 0;
+	for (auto item : queue)
+	{
+		buildQueue->push_back(item);
+		sizeOfQueue++;
+	}
+	buildQueueLock.unlock();
 }

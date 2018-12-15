@@ -537,11 +537,14 @@ void Client::receiveMessages()
 			bool inPositionZ = false;
 			bool inPlayerID = false;
 			bool inType = false;
+			bool inQueue = false;
+			bool inQueueItem = false;
 
 			int id = -1;
 			Ogre::Vector3 position(-1, -1, -1);
 			int playerID = -1;
 			int type = -1;
+			std::vector<int> queue;
 
 			while (token != NULL)
 			{
@@ -582,6 +585,16 @@ void Client::receiveMessages()
 					inType = true;
 					setFlag = true;
 				}
+				else if (tmp == "<Queue")
+				{
+					inQueue = true;
+					setFlag = true;
+				}
+				else if (inQueue && tmp == "<Item")
+				{
+					inQueueItem = true;
+					setFlag = true;
+				}
 
 				if (!setFlag)
 				{
@@ -615,6 +628,15 @@ void Client::receiveMessages()
 						type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
 						inType = false;
 					}
+					else if (inQueue && inQueueItem)
+					{
+						queue.push_back(std::atoi(tmp.substr(0, tmp.find("</Item")).c_str()));
+						inQueueItem = false;
+					}
+					else if (inQueue && tmp.find("</Queue") > 0)
+					{
+						inQueue = false;
+					}
 				}
 				
 				token = strtok(NULL, ">");
@@ -625,6 +647,7 @@ void Client::receiveMessages()
 			data.playerID = playerID;
 			data.position = position;
 			data.type = type;
+			data.queue = queue;
 
 			//std::cout << "Building " << id << " position as received: " << position << std::endl;
 			if (position.x != -1 && position.y != -1 && position.z != -1)
@@ -691,6 +714,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 					break;
 				}
 				b->setPosition(building.position);
+				b->setQueue(building.queue);
 				foundBuilding = true;
 				break;
 			}
@@ -711,6 +735,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 			{
 				build->setVisible(false);
 			}
+			build->setQueue(building.queue);
 			buildingsLock.lock();
 			localCopyOfBuildings->push_back(build);
 			buildingsLock.unlock();

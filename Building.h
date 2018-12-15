@@ -25,6 +25,8 @@ public:
 	void addUnitToQueue(int type);
 	void removeFirstItemFromQueue();
 	std::vector<int>* getQueue();
+	int getCurrentSizeOfQueue();
+	void setQueue(std::vector<int> queue);
 
 private:
 	Ogre::Entity* entity;
@@ -38,6 +40,7 @@ private:
 	std::vector<int>* buildQueue;
 	int sizeOfQueue;
 	int maxSizeOfBuildQueue;
+	std::mutex buildQueueLock;
 };
 
 #endif

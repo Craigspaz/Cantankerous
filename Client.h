@@ -46,6 +46,7 @@ private:
 		Ogre::Vector3 position;
 		int playerID;
 		int type;
+		std::vector<int> queue;
 	};
 
 	void processInitialMessage(char* message);

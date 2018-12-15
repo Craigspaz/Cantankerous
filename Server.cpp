@@ -343,7 +343,14 @@ void Server::sendBuildingToClient(Building* building)
 	message += std::to_string(building->getControllingPlayerID());
 	message += "</PlayerID><Type>";
 	message += std::to_string(building->getType());
-	message += "</Type>";
+	message += "</Type><Queue>";
+	for (int j = 0; j < building->getCurrentSizeOfQueue(); j++)
+	{
+		message += "<Item>";
+		message += std::to_string(building->getQueue()->at(j));
+		message += "</Item>";
+	}
+	message += "</Queue>";
 
 	unsigned short length = message.length();
 	//std::cout << "Length of message to send: " << length << std::endl;
