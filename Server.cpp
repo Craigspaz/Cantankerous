@@ -245,6 +245,22 @@ void Server::waitForMessages(SOCKET sock)
 				}
 				token = strtok(NULL, ">");
 			}
+
+			if (queueID == -1)
+			{
+				continue;
+			}
+			std::cout << "Adding unit: " << queueID << " to the queue" << std::endl;
+			buildingsLock.lock();
+			for (auto building : *buildings)
+			{
+				if (building->getID() == id)
+				{
+					building->addUnitToQueue(queueID);
+					break;
+				}
+			}
+			buildingsLock.unlock();
 		}
 	}
 }
