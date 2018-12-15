@@ -27,14 +27,51 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 		this->id = id;
 	}
 	alreadySelected = false;
-	buildQueue = new std::vector<int>();
+	buildQueue = new int[MAX_SIZE_OF_BUILD_QUEUE];
 	sizeOfQueue = 0;
 	maxSizeOfBuildQueue = MAX_SIZE_OF_BUILD_QUEUE;
+	ticksPassed = 0;
 }
 
 
 Building::~Building()
 {
+	delete buildQueue;
+}
+
+int Building::update()
+{
+	lock();
+	buildQueueLock.lock();
+	if (sizeOfQueue == 0)
+	{
+		ticksPassed = 0;
+		buildQueueLock.unlock();
+		unlock();
+		return -1;
+	}
+	buildQueueLock.unlock();
+
+	if (ticksPassed > TICKS_TILL_UNIT_CREATION)
+	{
+		int unitToCreate = -1;
+		if (sizeOfQueue > 0)
+		{
+			unitToCreate = this->buildQueue[0];
+			this->removeFirstItemFromQueue();
+		}
+		ticksPassed = 0;
+		unlock();
+		return unitToCreate;
+	}
+	else
+	{
+		std::cout << "Ticking..." << std::endl;
+		ticksPassed++;
+		unlock();
+		return -1;
+	}
+	unlock();
 }
 
 Ogre::Vector3 Building::getPosition()
@@ -75,6 +112,7 @@ void Building::setPosition(Ogre::Vector3 pos)
 
 void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 {
+	lock();
 	if (value == true)
 	{
 		if (!alreadySelected)
@@ -91,13 +129,21 @@ void Building::setSelected(bool value, OgreBites::TrayManager* trayManager)
 			trayManager->destroyAllWidgets();
 		}
 	}
+	unlock();
 }
 
 
 void Building::addUnitToQueue(int type)
 {
-	buildQueue->push_back(type);
-	sizeOfQueue++;
+	lock();
+	buildQueueLock.lock();
+	if (sizeOfQueue + 1 < maxSizeOfBuildQueue)
+	{
+		buildQueue[sizeOfQueue] = type;
+		sizeOfQueue++;
+	}
+	buildQueueLock.unlock();
+	unlock();
 }
 
 
@@ -105,7 +151,7 @@ void Building::removeFirstItemFromQueue()
 {
 	if (sizeOfQueue > 0)
 	{
-		for (int i = 0; i < sizeOfQueue && i + 1 < sizeOfQueue; i++)
+		for (int i = 0; (i + 1) < sizeOfQueue; i++)
 		{
 			buildQueue[i] = buildQueue[i + 1];
 		}
@@ -113,7 +159,43 @@ void Building::removeFirstItemFromQueue()
 	}
 }
 
-std::vector<int>* Building::getQueue()
+int* Building::getQueue()
 {
 	return buildQueue;
+}
+
+
+int Building::getCurrentSizeOfQueue()
+{
+	buildQueueLock.lock();
+	int size = sizeOfQueue;
+	buildQueueLock.unlock();
+	return size;
+}
+
+
+void Building::setQueue(std::vector<int> queue)
+{
+	lock();
+	buildQueueLock.lock();
+	//buildQueue->clear();
+	sizeOfQueue = 0;
+	for (auto item : queue)
+	{
+		buildQueue[sizeOfQueue] = item;
+		sizeOfQueue++;
+	}
+	buildQueueLock.unlock();
+	unlock();
+}
+
+
+void Building::lock()
+{
+	mutex.lock();
+}
+
+void Building::unlock()
+{
+	mutex.unlock();
 }

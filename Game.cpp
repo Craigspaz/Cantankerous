@@ -7,6 +7,7 @@ using namespace OgreBites;
 Game::Game() : ApplicationContext("Cantankerous") // Initializes the Ogre context
 {
 	deltaTime = 0;
+	timePassed = 0;
 	if (Messages::initMessages() != 0)
 	{
 		printf("Unexpected error initializing socket framework...\n");
@@ -329,6 +330,7 @@ bool Game::frameRenderingQueued(const Ogre::FrameEvent& event)
 	trayManager->frameRendered(event);
 	//mControls->frameRendered(evt);
 	deltaTime += event.timeSinceLastFrame;
+	timePassed += event.timeSinceLastFrame;
 	while (deltaTime >= 1.0f / 60.0f)
 	{
 		//update the game

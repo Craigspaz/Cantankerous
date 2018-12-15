@@ -14,5 +14,6 @@
 
 
 #define MAX_SIZE_OF_BUILD_QUEUE 9
+#define TICKS_TILL_UNIT_CREATION 120
 
 #endif

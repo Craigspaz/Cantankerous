@@ -23,7 +23,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	messageRecievingThread = new std::thread(&Server::listenForConnections,this);
 	messageRecievingThread->detach();
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
 	addUnit(tank);
 	Building* building = new Building(Ogre::Vector3(0, 20, 0), this->sceneManager, 1, BUILDING_CONSTRUCTOR);
@@ -46,11 +46,11 @@ void Server::update()
 		unit->update(game->getCurrentLevel());
 
 		// tmp
-		if (unit->isMoving() == false && unit->getPosition().x == 0 && unit->getPosition().z == 0)
-		{
-			std::cout << "Finding path to : " << (game->getCurrentLevel()->getTiles()->at(170)->getGridPosition()) << std::endl;
-			unit->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
-		}
+		//if (unit->isMoving() == false && unit->getPosition().x == 0 && unit->getPosition().z == 0)
+		//{
+		//	std::cout << "Finding path to : " << (game->getCurrentLevel()->getTiles()->at(170)->getGridPosition()) << std::endl;
+		//	unit->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
+		//}
 
 		//std::cout << "Unit Position: " << unit->getPosition() << std::endl;
 		this->sendUnitToClients(unit);
@@ -68,6 +68,18 @@ void Server::update()
 	buildingsLock.lock();
 	for (auto building : *buildings)
 	{
+		int IDRet = building->update();
+		if (IDRet >= 0)
+		{
+			if (IDRet == UNIT_TANK)
+			{
+				std::cout << "Creating tank..." << std::endl;
+				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, -1);
+				tank->update(game->getCurrentLevel());
+				tank->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
+				addUnit(tank);
+			}
+		}
 		this->sendBuildingToClient(building);
 	}
 	buildingsLock.unlock();
@@ -267,6 +279,7 @@ void Server::waitForMessages(SOCKET sock)
 
 void Server::sendUnitToClients(Unit* unit)
 {
+	unit->lock();
 	//printf("Sending unit to clients");
 	char sendBuffer[1024];
 	Ogre::Vector3 facingDirection = unit->getDirectionMoving();
@@ -296,7 +309,7 @@ void Server::sendUnitToClients(Unit* unit)
 	message += "</PlayerID><Type>";
 	message += std::to_string(unit->getType());
 	message += "</Type>";
-
+	unit->unlock();
 	unsigned short length = message.length();
 	sendBuffer[1] = length & 0xFF00;
 	sendBuffer[2] = length & 0x00FF;
@@ -316,19 +329,24 @@ void Server::sendUnitToClients(Unit* unit)
 
 void Server::addUnit(Unit* unit)
 {
+	unitsLock.lock();
 	this->units->push_back(unit);
+	unitsLock.unlock();
 	sendUnitToClients(unit);
 }
 
 void Server::addBuilding(Building* building)
 {
+	buildingsLock.lock();
 	this->buildings->push_back(building);
+	buildingsLock.unlock();
 	this->sendBuildingToClient(building);
 }
 
 
 void Server::sendBuildingToClient(Building* building)
 {
+	building->lock();
 	//std::cout << "Sending building to clients: " << building->getPosition() << std::endl;
 	char sendBuffer[1024];
 	sendBuffer[0] = 0x02;
@@ -343,7 +361,15 @@ void Server::sendBuildingToClient(Building* building)
 	message += std::to_string(building->getControllingPlayerID());
 	message += "</PlayerID><Type>";
 	message += std::to_string(building->getType());
-	message += "</Type>";
+	message += "</Type><Queue>";
+	for (int j = 0; j < building->getCurrentSizeOfQueue(); j++)
+	{
+		message += "<Item>";
+		message += std::to_string(building->getQueue()[j]);
+		message += "</Item>";
+	}
+	message += "</Queue>";
+	building->unlock();
 
 	unsigned short length = message.length();
 	//std::cout << "Length of message to send: " << length << std::endl;

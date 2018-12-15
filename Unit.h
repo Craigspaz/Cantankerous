@@ -33,6 +33,9 @@ public:
 	virtual void setVisible(bool value) = 0;
 	void setSelected(bool value);
 
+	void lock();
+	void unlock();
+
 protected:
 	std::list<Tile*>* path;
 	Tile* currentTile;
@@ -48,6 +51,8 @@ protected:
 	int type;
 	bool isMovingAlongPath;
 	Ogre::Vector3 directionMoving;
+
+	std::mutex mutex;
 
 private:
 	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);

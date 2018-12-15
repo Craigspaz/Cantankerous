@@ -66,6 +66,7 @@ private:
 
 	std::string clientIP;
 	Ogre::Vector3 directionFacing;
+	Ogre::Real timePassed;
 };	
 
 #endif
