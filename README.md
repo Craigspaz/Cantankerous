@@ -6,7 +6,7 @@ Created by Craig Ferris
 
 - Final Video Still In Progress
 - Second Status Update Video
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/LqgKJLrDDk/maxresdefault.jpg)](https://www.youtube.com/watch?v=-LqgKJLrDDk)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/g9OkHOtbZXs/maxresdefault.jpg)](https://www.youtube.com/watch?v=-LqgKJLrDDk)
 - First Status Update Video
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wH3U3SDuZtM/maxresdefault.jpg)](https://www.youtube.com/watch?v=wH3U3SDuZtM)
 
