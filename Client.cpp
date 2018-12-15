@@ -106,7 +106,10 @@ void Client::processInitialMessage(char* message)
 
 Client::~Client()
 {
-
+	delete localCopyOfUnits;
+	delete unitsToUpdate;
+	delete localCopyOfBuildings;
+	delete buildingsToUpdate;
 }
 
 

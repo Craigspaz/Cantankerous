@@ -394,6 +394,7 @@ Ogre::Vector3 Unit::getDirectionMoving()
 
 void Unit::setSelected(bool value)
 {
+	lock();
 	static Ogre::Entity* entity = NULL;
 	if (value == true && selectionNode == NULL)
 	{
@@ -420,4 +421,16 @@ void Unit::setSelected(bool value)
 		selectionNode->removeAndDestroyAllChildren();
 		selectionNode = NULL;
 	}
+	unlock();
+}
+
+
+void Unit::lock()
+{
+	mutex.lock();
+}
+
+void Unit::unlock()
+{
+	mutex.unlock();
 }

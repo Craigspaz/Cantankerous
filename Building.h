@@ -14,6 +14,10 @@ public:
 	Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int type, int id=-1);
 	~Building();
 
+	// Returns the ID of the unit to create or -1 if not to create anything
+	int update();
+
+
 	Ogre::Vector3 getPosition();
 	Ogre::Entity* getEntity();
 	int getControllingPlayerID();
@@ -24,9 +28,12 @@ public:
 	void setSelected(bool value, OgreBites::TrayManager* trayManager);
 	void addUnitToQueue(int type);
 	void removeFirstItemFromQueue();
-	std::vector<int>* getQueue();
+	int* getQueue();
 	int getCurrentSizeOfQueue();
 	void setQueue(std::vector<int> queue);
+
+	void lock();
+	void unlock();
 
 private:
 	Ogre::Entity* entity;
@@ -37,10 +44,13 @@ private:
 	int id;
 	bool alreadySelected;
 
-	std::vector<int>* buildQueue;
+	int* buildQueue;
 	int sizeOfQueue;
 	int maxSizeOfBuildQueue;
 	std::mutex buildQueueLock;
+	int ticksPassed;
+
+	std::mutex mutex;
 };
 
 #endif
