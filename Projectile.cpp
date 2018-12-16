@@ -1,6 +1,7 @@
 #include "Projectile.h"
 #include "Unit.h"
 #include "Building.h"
+#include "Tile.h"
 
 
 
@@ -18,6 +19,7 @@ Projectile::Projectile(Ogre::Vector3 startingPosition, double damage, double mis
 	this->lockedOn = lockedOn;
 	unitTarget = NULL;
 	buildingTarget = NULL;
+	buildingTargetTile = NULL;
 	destroyed = false;
 	if (id == -1)
 	{
@@ -78,7 +80,38 @@ void Projectile::update()
 	}
 	else if (buildingTarget != NULL)
 	{
-
+		if (lockedOn)
+		{
+			Ogre::Vector3 movementDirection = buildingTarget->getPosition() - this->getPosition();
+			if (movementDirection.length() < movementSpeed)
+			{
+				int random = rand() % 100;
+				int rate = this->missRate * 100;
+				if (random > rate)
+				{
+					buildingTarget->takeDamage(damage);
+				}
+				this->entity->setVisible(false);
+				this->destroyed = true;
+			}
+			Ogre::Vector3 movementAmount = movementDirection.normalisedCopy() * movementSpeed;
+			this->setPosition(this->getPosition() + movementAmount);
+		}
+		else
+		{
+			static Tile* targetTile = buildingTargetTile;
+			Ogre::Vector3 targetPosition = targetTile->getPosition() + Ogre::Vector3(0, buildingTarget->getPosition().y, 0);
+			Ogre::Vector3 movementDirection = targetPosition - this->getPosition();
+			if (movementDirection.length() < movementSpeed)
+			{
+				//handle miss rate
+				buildingTarget->takeDamage(damage);
+				this->entity->setVisible(false);
+				this->destroyed = true;
+			}
+			Ogre::Vector3 movementAmount = movementDirection.normalisedCopy() * movementSpeed;
+			this->setPosition(this->getPosition() + movementAmount);
+		}
 	}
 }
 
@@ -87,9 +120,10 @@ void Projectile::setTarget(Unit* unit)
 	unitTarget = unit;
 }
 
-void Projectile::setTarget(Building* building)
+void Projectile::setTarget(Building* building, Tile* tile)
 {
 	buildingTarget = building;
+	buildingTargetTile = tile;
 }
 
 void Projectile::setPosition(Ogre::Vector3 position)

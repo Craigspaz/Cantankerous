@@ -12,6 +12,7 @@
 
 class Unit;
 class Building;
+class Tile;
 
 class Projectile
 {
@@ -20,7 +21,7 @@ public:
 	~Projectile();
 	void update();
 	void setTarget(Unit* unit);
-	void setTarget(Building* building);
+	void setTarget(Building* building, Tile* tile);
 
 	void setPosition(Ogre::Vector3 position);
 	Ogre::Vector3 getPosition();
@@ -42,6 +43,7 @@ private:
 
 	Unit* unitTarget;
 	Building* buildingTarget;
+	Tile* buildingTargetTile;
 	bool lockedOn;
 	bool destroyed;
 };

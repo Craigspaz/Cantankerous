@@ -56,6 +56,14 @@ void Tank::attack(std::vector<Projectile*>* projectiles)
 		projectile->setTarget(targetUnit);
 		currentTicks = 0;
 	}
+	else if (this->targetBuilding != NULL && currentTicks >= firingCoolOffAmount)
+	{
+		// fire projectile at target
+		Projectile* projectile = new Projectile(this->getPosition(), this->damage + rand() % 30, 0.1, this->manager, 2, false, this->controlledByPlayerNumber);
+		projectiles->push_back(projectile);
+		projectile->setTarget(targetBuilding, targetBuildingTile);
+		currentTicks = 0;
+	}
 	else
 	{
 		currentTicks++;

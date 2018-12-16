@@ -31,6 +31,9 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 
 	Building* building2 = new Building(Ogre::Vector3(1800, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
 	addBuilding(building2);
+
+	Building* test2 = new Building(Ogre::Vector3(100, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
+	addBuilding(test2);
 	
 }
 
@@ -145,6 +148,7 @@ void Server::update()
 			}
 			if ((*iterator)->isDestroyed())
 			{
+				sendProjectileToClient(*iterator);
 				delete (*iterator);
 				iterator = projectiles->erase(iterator);
 				madeItAllTheWayThrough = false;
@@ -164,6 +168,34 @@ void Server::update()
 		}
 	}
 	projectilesLock.unlock();
+
+	buildingsLock.lock();
+	int buildingsIndex = 0;
+	while (true)
+	{
+		bool madeItAllOfTheWayThrough = true;
+		int counter = 0;
+		for (auto iterator = buildings->begin(); iterator != buildings->end(); iterator++)
+		{
+			if (counter != buildingsIndex)
+			{
+				continue;
+			}
+			if ((*iterator)->isDestroyed())
+			{
+				this->sendBuildingToClient(*iterator);
+				delete (*iterator);
+				iterator = buildings->erase(iterator);
+				madeItAllOfTheWayThrough = false;
+				break;
+			}
+		}
+		if (madeItAllOfTheWayThrough)
+		{
+			break;
+		}
+	}
+	buildingsLock.unlock();
 
 }
 
@@ -489,7 +521,7 @@ void Server::waitForMessages(SOCKET sock)
 			buildingsLock.lock();
 			for (auto building : *buildings)
 			{
-				if (building->getID() == id)
+				if (building->getID() == enemyID)
 				{
 					targetEnemyBuilding = building;
 					break;
@@ -611,7 +643,18 @@ void Server::sendBuildingToClient(Building* building)
 	message += std::to_string(building->getControllingPlayerID());
 	message += "</PlayerID><Type>";
 	message += std::to_string(building->getType());
-	message += "</Type><Queue>";
+	message += "</Type>";
+	message += "<Alive>";
+	if (building->isDestroyed())
+	{
+		message += std::to_string(1);
+	}
+	else
+	{
+		message += std::to_string(0);
+	}
+	message += "</Alive>";
+	message += "<Queue>";
 	for (int j = 0; j < building->getCurrentSizeOfQueue(); j++)
 	{
 		message += "<Item>";

@@ -48,6 +48,7 @@ private:
 		int playerID;
 		int type;
 		std::vector<int> queue;
+		bool isDestroyed;
 	};
 
 	struct ProjectilesToUpdate

@@ -31,7 +31,7 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 	sizeOfQueue = 0;
 	maxSizeOfBuildQueue = MAX_SIZE_OF_BUILD_QUEUE;
 	ticksPassed = 0;
-	health = 200;
+	health = 100;
 	destroyed = false;
 }
 
@@ -43,6 +43,11 @@ Building::~Building()
 
 int Building::update()
 {
+	if (this->health <= 0)
+	{
+		this->setVisible(false);
+		this->destroyed = true;
+	}
 	lock();
 	buildQueueLock.lock();
 	if (sizeOfQueue == 0)
@@ -211,4 +216,9 @@ void Building::takeDamage(int damage)
 bool Building::isDestroyed()
 {
 	return destroyed;
+}
+
+void Building::setDestroyed(bool a)
+{
+	destroyed = a;
 }

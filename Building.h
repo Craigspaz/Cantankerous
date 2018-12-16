@@ -33,6 +33,7 @@ public:
 	void setQueue(std::vector<int> queue);
 	void takeDamage(int damage);
 	bool isDestroyed();
+	void setDestroyed(bool a);
 
 	void lock();
 	void unlock();

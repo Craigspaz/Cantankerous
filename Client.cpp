@@ -619,12 +619,14 @@ void Client::receiveMessages()
 			bool inType = false;
 			bool inQueue = false;
 			bool inQueueItem = false;
+			bool inAlive = false;
 
 			int id = -1;
 			Ogre::Vector3 position(-1, -1, -1);
 			int playerID = -1;
 			int type = -1;
 			std::vector<int> queue;
+			bool isDestroyed = false;
 
 			while (token != NULL)
 			{
@@ -675,6 +677,11 @@ void Client::receiveMessages()
 					inQueueItem = true;
 					setFlag = true;
 				}
+				else if (tmp == "<Alive")
+				{
+					inAlive = true;
+					setFlag = true;
+				}
 
 				if (!setFlag)
 				{
@@ -708,6 +715,19 @@ void Client::receiveMessages()
 						type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
 						inType = false;
 					}
+					else if (inAlive)
+					{
+						int val = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						if (val == 1)
+						{
+							isDestroyed = true;
+						}
+						else
+						{
+							isDestroyed = false;
+						}
+						inAlive = false;
+					}
 					else if (inQueue && inQueueItem)
 					{
 						queue.push_back(std::atoi(tmp.substr(0, tmp.find("</Item")).c_str()));
@@ -728,6 +748,7 @@ void Client::receiveMessages()
 			data.position = position;
 			data.type = type;
 			data.queue = queue;
+			data.isDestroyed = isDestroyed;
 
 			//std::cout << "Building " << id << " position as received: " << position << std::endl;
 			if (position.x != -1 && position.y != -1 && position.z != -1)
@@ -913,6 +934,11 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 				}
 				b->setPosition(building.position);
 				b->setQueue(building.queue);
+				b->setDestroyed(building.isDestroyed);
+				if (building.isDestroyed)
+				{
+					b->setVisible(false);
+				}
 				foundBuilding = true;
 				break;
 			}
@@ -922,7 +948,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		if (!foundBuilding)
 		{
 			// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
-			if (building.position.y == 0 || building.id == -1)
+			if (building.position.y == 0 || building.id == -1 || building.isDestroyed)
 			{
 				break;
 			}
@@ -1020,6 +1046,27 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		}
 	}
 	projectilesLock.unlock();
+
+	buildingsLock.lock();
+	while (true)
+	{
+		bool gotThrough = true;
+		for (auto iterator = localCopyOfBuildings->begin(); iterator != localCopyOfBuildings->end(); iterator++)
+		{
+			if ((*iterator)->isDestroyed())
+			{
+				delete *iterator;
+				iterator = localCopyOfBuildings->erase(iterator);
+				gotThrough = false;
+				break;
+			}
+		}
+		if (gotThrough)
+		{
+			break;
+		}
+	}
+	buildingsLock.unlock();
 
 	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{
