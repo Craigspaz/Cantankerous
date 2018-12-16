@@ -64,6 +64,10 @@ void Server::update()
 	for (auto a : *pathFindingQueue)
 	{
 		a.unit->setDestination(a.destinationTile, this->game->getCurrentLevel());
+		if (a.targetEnemy != NULL)
+		{
+			a.unit->setTarget(a.targetEnemy);
+		}
 	}
 	pathFindingQueue->clear();
 	pathFindingLock.unlock();
@@ -217,6 +221,7 @@ void Server::waitForMessages(SOCKET sock)
 			UnitPathFindingStruct data;
 			data.unit = selectedUnit;
 			data.destinationTile = endTile;
+			data.targetEnemy = NULL;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
@@ -287,13 +292,9 @@ void Server::waitForMessages(SOCKET sock)
 			char* tmpStart = buffer + 3;
 			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 			bool inID = false;
-			bool inGridCoords = false;
-			bool inGridCoordsX = false;
-			bool inGridCoordsY = false;
 			bool inEnemyID = false;
 
 			int id = -1;
-			Ogre::Vector2 gridCoords(0, 0);
 			int enemyID = -1;
 
 			char* tmpStart1 = buffer + 3;
@@ -305,21 +306,6 @@ void Server::waitForMessages(SOCKET sock)
 				if (tmp == "<UnitID")
 				{
 					inID = true;
-					setFlag = true;
-				}
-				else if (tmp == "<GridCoords")
-				{
-					inGridCoords = true;
-					setFlag = true;
-				}
-				else if (tmp == "<X" && inGridCoords)
-				{
-					inGridCoordsX = true;
-					setFlag = true;
-				}
-				else if (tmp == "<Y" && inGridCoords)
-				{
-					inGridCoordsY = true;
 					setFlag = true;
 				}
 				else if (tmp == "<EnemyID")
@@ -334,17 +320,6 @@ void Server::waitForMessages(SOCKET sock)
 					{
 						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
 						inID = false;
-					}
-					else if (inGridCoordsX)
-					{
-						gridCoords.x = std::atoi(tmp.substr(0, tmp.find("</X")).c_str());
-						inGridCoordsX = false;
-					}
-					else if (inGridCoordsY)
-					{
-						gridCoords.y = std::atoi(tmp.substr(0, tmp.find("</Y")).c_str());
-						inGridCoordsY = false;
-						inGridCoords = false;
 					}
 					else if (inEnemyID)
 					{
@@ -369,18 +344,10 @@ void Server::waitForMessages(SOCKET sock)
 				}
 			}
 			unitsLock.unlock();
-			Tile* endTile = NULL;
-			for (std::vector<Tile*>::iterator i = this->game->getCurrentLevel()->getTiles()->begin(); i != this->game->getCurrentLevel()->getTiles()->end(); i++)
-			{
-				if ((*i)->getGridPosition().x == gridCoords.x && (*i)->getGridPosition().y == gridCoords.y)
-				{
-					endTile = *i;
-					break;
-				}
-			}
+			
 			UnitPathFindingStruct data;
 			data.unit = selectedUnit;
-			data.destinationTile = endTile;
+			data.destinationTile = targetEnemy->getCurrentTile();
 			data.targetEnemy = targetEnemy;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);

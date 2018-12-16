@@ -33,6 +33,7 @@ public:
 	virtual void setVisible(bool value) = 0;
 	void setSelected(bool value);
 	Tile* getCurrentTile();
+	void setTarget(Unit* unit);
 
 
 	void lock();

@@ -255,7 +255,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 								{
 									if (unit->getPlayerControlledBy() != this->playerID)
 									{
-										tellServerToDeterminePathAndLockOnToTarget(unit->getUnitID(), selectedUnit->getUnitID(), unit->getCurrentTile()->getGridPosition());
+										tellServerToDeterminePathAndLockOnToTarget(unit->getUnitID(), selectedUnit->getUnitID());
 										foundEnemy = true;
 									}
 								}
@@ -829,10 +829,10 @@ void Client::tellClientUserAskedToQueueUnit(int type)
 }
 
 
-void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID, Ogre::Vector2 gridCoords)
+void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID)
 {
 	char sendBuffer[1024];
-	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><GridCoords><X>" + std::to_string(gridCoords.x) + "</X><Y>" + std::to_string(gridCoords.y) + "</Y></GridCoords><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
+	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
 	sendBuffer[0] = 0x05;
 	sendBuffer[1] = message.length() & 0xFF00;
 	sendBuffer[2] = message.length() & 0x00FF;
