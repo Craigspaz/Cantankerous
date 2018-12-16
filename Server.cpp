@@ -14,6 +14,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	sockets = new std::vector<SOCKET>();
 	pathFindingQueue = new std::list<UnitPathFindingStruct>();
 	buildings = new std::vector<Building*>();
+	numberOfPlayers = 1;
 
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
@@ -26,6 +27,8 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
 	addUnit(tank);
+	Tank* tank1 = new Tank(Ogre::Vector3(300, 10, 0), this->sceneManager, 2);
+	addUnit(tank1);
 	Building* building = new Building(Ogre::Vector3(0, 20, 0), this->sceneManager, 1, BUILDING_CONSTRUCTOR);
 	addBuilding(building);
 	
@@ -74,7 +77,7 @@ void Server::update()
 			if (IDRet == UNIT_TANK)
 			{
 				std::cout << "Creating tank..." << std::endl;
-				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, -1);
+				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, 1);
 				tank->update(game->getCurrentLevel());
 				tank->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
 				addUnit(tank);
@@ -113,7 +116,9 @@ void Server::waitForMessages(SOCKET sock)
 		if (bytesReceived == 3 && buffer[0] == 0x09 && buffer[1] == 0x00 && buffer[2] == 0x00)
 		{
 			char sendBuffer[1024];
-			std::string filename = "<Level>" + game->getCurrentLevelFileName() + "</Level>";
+			playerLock.lock();
+			std::string filename = "<Level>" + game->getCurrentLevelFileName() + "</Level><PlayerID>" + std::to_string(numberOfPlayers + 1) + "</PlayerID>";
+			playerLock.unlock();
 			sendBuffer[0] = 0xFF;
 			sendBuffer[1] = filename.length() & 0xFF00;
 			sendBuffer[2] = filename.length() & 0x00FF;

@@ -16,6 +16,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	inet_pton(AF_INET, ip.c_str(), &(connection.sin_addr.s_addr));
 	connection.sin_family = AF_INET;
 	connection.sin_port = htons(port);
+	playerID = -1;
 	if (Messages::connectToServer(sock, connection) != 0)
 	{
 		printf("Failed to initialze connection to server. Closing game. Please try again later\n");
@@ -84,6 +85,7 @@ void Client::processInitialMessage(char* message)
 	char* token = strtok(message, ">");
 
 	bool foundLevelTag = false;
+	bool foundPlayerID = false;
 	while (token != NULL)
 	{
 		std::string tmp = token;
@@ -91,13 +93,22 @@ void Client::processInitialMessage(char* message)
 		{
 			foundLevelTag = true;
 		}
+		else if (tmp == "<PlayerID")
+		{
+			foundPlayerID = true;
+		}
 		else if (foundLevelTag)
 		{
-			std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-			path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+			//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+			//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
 			std::string fileName = tmp.substr(0, tmp.find("</Level"));
-			game->setLevel(new Level(path, fileName, sceneManager));
+			game->setLevel(new Level("./", fileName, sceneManager));
 			foundLevelTag = false;
+		}
+		else if (foundPlayerID)
+		{
+			playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+			foundPlayerID = false;
 		}
 
 		token = strtok(NULL, ">");

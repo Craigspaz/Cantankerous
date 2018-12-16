@@ -57,6 +57,7 @@ private:
 	SOCKET sock;
 	struct sockaddr_in connection;
 	Game* game;
+	int playerID;
 	Ogre::SceneManager* sceneManager;
 	std::thread* messageRecievingThread;
 

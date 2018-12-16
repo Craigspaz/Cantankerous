@@ -13,6 +13,7 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 {
 	Ogre::SceneNode* sceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 	this->node = sceneNode;
+	this->node->setPosition(position);
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
 	this->type = type;
