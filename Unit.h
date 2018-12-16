@@ -5,6 +5,7 @@
 #include "Tile.h"
 #include <vector>
 #include "Level.h"
+#include "Projectile.h"
 
 class Unit
 {
@@ -20,7 +21,7 @@ public:
 	void setOrientation(Ogre::Quaternion a);
 	Ogre::Vector3 getScale();
 	
-	virtual void update(Level* level);
+	virtual void update(Level* level, std::vector<Projectile*>* projectiles);
 	int getType();
 
 	int getPlayerControlledBy();
@@ -34,6 +35,12 @@ public:
 	void setSelected(bool value);
 	Tile* getCurrentTile();
 	void setTarget(Unit* unit);
+
+	virtual void attack(std::vector<Projectile*>* projectiles) = 0;
+
+	void takeDamage(double amount);
+	bool isDead();
+	void setDead(bool a);
 
 
 	void lock();
@@ -57,8 +64,10 @@ protected:
 
 	std::mutex mutex;
 
-	Unit* target;
+	Unit* targetUnit;
 	int shootingRange;
+	bool inRange;
+	bool dead;
 
 private:
 	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);

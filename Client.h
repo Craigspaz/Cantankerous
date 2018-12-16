@@ -38,6 +38,7 @@ private:
 		Ogre::Vector3 directionFacing;
 		int playerID;
 		int type;
+		bool isAlive;
 	};
 
 	struct BuildingsToUpdateData
@@ -47,6 +48,14 @@ private:
 		int playerID;
 		int type;
 		std::vector<int> queue;
+	};
+
+	struct ProjectilesToUpdate
+	{
+		int id = -1;
+		Ogre::Vector3 position;
+		int playerID;
+		bool isDestroyed;
 	};
 
 	void processInitialMessage(char* message);
@@ -82,6 +91,13 @@ private:
 
 	std::mutex selectedUnitLock;
 	std::mutex selectedBuildingLock;
+
+
+	std::vector<Projectile*>* localCopyOfProjectiles;
+	std::mutex projectilesLock;
+
+	std::vector<ProjectilesToUpdate>* projectilesToUpdate;
+	std::mutex projectilesToUpdateLock;
 
 };
 

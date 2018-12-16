@@ -33,8 +33,10 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->health = 100;
 	this->damage = 10;
 	selectionNode = NULL;
-	target = NULL;
-	shootingRange = 3;
+	targetUnit = NULL;
+	shootingRange = 5;
+	inRange = false;
+	dead = false;
 }
 
 
@@ -54,8 +56,13 @@ Ogre::Vector3 Unit::getPosition()
 	return node->getPosition();
 }
 
-void Unit::update(Level* level)
+void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 {
+	if (this->health <= 0)
+	{
+		this->setVisible(false);
+		this->dead = true;
+	}
 	if (currentTile == NULL)
 	{
 		for (auto tile : *(level->getTiles()))
@@ -73,18 +80,37 @@ void Unit::update(Level* level)
 		}
 	}
 
+	if (inRange && targetUnit != NULL && path->empty() && !this->isMovingAlongPath)
+	{
+		Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
+		if (diff.length() <= this->shootingRange)
+		{
+			attack(projectiles);
+			if (targetUnit->isDead())
+			{
+				targetUnit = NULL;
+				inRange = false;
+			}
+		}
+		else
+		{
+			inRange = false;
+		}
+	}
+
 	// TODO: Pathfinding
 	if (!path->empty() && this->isMovingAlongPath)
 	{
-		if (target != NULL && currentTile != NULL && target->getCurrentTile() != NULL)
+		if (targetUnit != NULL && currentTile != NULL && targetUnit->getCurrentTile() != NULL)
 		{
-			Ogre::Vector2 diff = currentTile->getGridPosition() - target->getCurrentTile()->getGridPosition();
+			Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
 			if (diff.length() <= this->shootingRange)
 			{
 				// target in range start firing.
 
 				path->clear();
 				this->isMovingAlongPath = false;
+				inRange = true;
 				return;
 			}
 		}
@@ -458,5 +484,22 @@ Tile* Unit::getCurrentTile()
 
 void Unit::setTarget(Unit* unit)
 {
-	this->target = unit;
+	this->targetUnit = unit;
+}
+
+
+void Unit::takeDamage(double amount)
+{
+	this->health -= amount;
+}
+
+bool Unit::isDead()
+{
+	return this->dead;
+}
+
+
+void Unit::setDead(bool a)
+{
+	this->dead = a;
 }

@@ -30,6 +30,8 @@ private:
 	void addUnit(Unit* unit);
 	void addBuilding(Building* building);
 
+	void sendProjectileToClient(Projectile* projectile);
+
 	std::vector<SOCKET>* sockets;
 
 	std::vector<Unit*>* units;
@@ -56,6 +58,10 @@ private:
 
 	std::vector<Building*>* buildings;
 	std::mutex buildingsLock;
+
+
+	std::vector<Projectile*>* projectiles;
+	std::mutex projectilesLock;
 
 };
 
