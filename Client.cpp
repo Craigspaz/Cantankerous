@@ -237,7 +237,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						buildingsLock.lock();
 						for (auto building : *localCopyOfBuildings)
 						{
-							if (building->getEntity() == res)
+							if (building->getEntity() == res && building->getControllingPlayerID() == this->playerID)
 							{
 								std::cout << "Clicked on a building" << std::endl;
 								selectedBuildingLock.lock();
@@ -280,6 +280,9 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							unitsLock.unlock();
 							if (!foundEnemy)
 							{
+								buildingsLock.lock();
+
+								buildingsLock.unlock();
 								Tile* endTile = NULL;
 								for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
 								{
