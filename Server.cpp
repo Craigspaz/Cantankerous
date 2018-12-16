@@ -14,7 +14,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	sockets = new std::vector<SOCKET>();
 	pathFindingQueue = new std::list<UnitPathFindingStruct>();
 	buildings = new std::vector<Building*>();
-	numberOfPlayers = 0;
+	numberOfPlayers = 1;
 
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
@@ -117,7 +117,7 @@ void Server::waitForMessages(SOCKET sock)
 		{
 			char sendBuffer[1024];
 			playerLock.lock();
-			std::string filename = "<Level>" + game->getCurrentLevelFileName() + "</Level><PlayerID>" + std::to_string(numberOfPlayers + 1) + "</PlayerID>";
+			std::string filename = "<Level>" + game->getCurrentLevelFileName() + "</Level><PlayerID>" + std::to_string(numberOfPlayers++) + "</PlayerID>";
 			playerLock.unlock();
 			sendBuffer[0] = 0xFF;
 			sendBuffer[1] = filename.length() & 0xFF00;
@@ -278,6 +278,113 @@ void Server::waitForMessages(SOCKET sock)
 				}
 			}
 			buildingsLock.unlock();
+		}
+		else if (buffer[0] == 0x05) // Receive pathfinding message with lock on to target
+		{
+			//std::cout << "Received pathfinding request message" << std::endl;
+			buffer[bytesReceived] = '\0';
+			printf("Receiving unit add message\n");
+			char* tmpStart = buffer + 3;
+			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+			bool inID = false;
+			bool inGridCoords = false;
+			bool inGridCoordsX = false;
+			bool inGridCoordsY = false;
+			bool inEnemyID = false;
+
+			int id = -1;
+			Ogre::Vector2 gridCoords(0, 0);
+			int enemyID = -1;
+
+			char* tmpStart1 = buffer + 3;
+			char* token = strtok(tmpStart1, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<UnitID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<GridCoords")
+				{
+					inGridCoords = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inGridCoords)
+				{
+					inGridCoordsX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inGridCoords)
+				{
+					inGridCoordsY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<EnemyID")
+				{
+					inEnemyID = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inGridCoordsX)
+					{
+						gridCoords.x = std::atoi(tmp.substr(0, tmp.find("</X")).c_str());
+						inGridCoordsX = false;
+					}
+					else if (inGridCoordsY)
+					{
+						gridCoords.y = std::atoi(tmp.substr(0, tmp.find("</Y")).c_str());
+						inGridCoordsY = false;
+						inGridCoords = false;
+					}
+					else if (inEnemyID)
+					{
+						enemyID = std::atoi(tmp.substr(0, tmp.find("</EnemyID")).c_str());
+						inEnemyID = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			Unit* selectedUnit = NULL;
+			Unit* targetEnemy = NULL;
+			unitsLock.lock();
+			for (auto unit : *units)
+			{
+				if (unit->getUnitID() == id)
+				{
+					selectedUnit = unit;
+				}
+				if (unit->getUnitID() == enemyID)
+				{
+					targetEnemy = unit;
+				}
+			}
+			unitsLock.unlock();
+			Tile* endTile = NULL;
+			for (std::vector<Tile*>::iterator i = this->game->getCurrentLevel()->getTiles()->begin(); i != this->game->getCurrentLevel()->getTiles()->end(); i++)
+			{
+				if ((*i)->getGridPosition().x == gridCoords.x && (*i)->getGridPosition().y == gridCoords.y)
+				{
+					endTile = *i;
+					break;
+				}
+			}
+			UnitPathFindingStruct data;
+			data.unit = selectedUnit;
+			data.destinationTile = endTile;
+			data.targetEnemy = targetEnemy;
+			pathFindingLock.lock();
+			pathFindingQueue->push_back(data);
+			pathFindingLock.unlock();
 		}
 	}
 }

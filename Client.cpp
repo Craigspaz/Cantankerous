@@ -246,18 +246,36 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						selectedUnitLock.lock();
 						if (selectedUnit != NULL)
 						{
-							Tile* endTile = NULL;
-							for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
+							bool foundEnemy = false;
+							unitsLock.lock();
+							for (auto unit : *localCopyOfUnits)
 							{
-								if ((*j)->getEntity() == res)
+								Tank* tank = (Tank*)unit;
+								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 								{
-									endTile = *j;
-									break;
+									if (unit->getPlayerControlledBy() != this->playerID)
+									{
+										tellServerToDeterminePathAndLockOnToTarget(unit->getUnitID(), selectedUnit->getUnitID(), unit->getCurrentTile()->getGridPosition());
+										foundEnemy = true;
+									}
 								}
 							}
-							if (endTile != NULL)
+							unitsLock.unlock();
+							if (!foundEnemy)
 							{
-								tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
+								Tile* endTile = NULL;
+								for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
+								{
+									if ((*j)->getEntity() == res)
+									{
+										endTile = *j;
+										break;
+									}
+								}
+								if (endTile != NULL)
+								{
+									tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
+								}
 							}
 						}
 						selectedUnitLock.unlock();
@@ -789,8 +807,6 @@ void Client::tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords)
 	}
 }
 
-
-
 void Client::tellClientUserAskedToQueueUnit(int type)
 {
 	std::cout << "Sending queue up message to server" << std::endl;
@@ -810,4 +826,21 @@ void Client::tellClientUserAskedToQueueUnit(int type)
 		int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
 	}
 	selectedBuildingLock.unlock();
+}
+
+
+void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID, Ogre::Vector2 gridCoords)
+{
+	char sendBuffer[1024];
+	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><GridCoords><X>" + std::to_string(gridCoords.x) + "</X><Y>" + std::to_string(gridCoords.y) + "</Y></GridCoords><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
+	sendBuffer[0] = 0x05;
+	sendBuffer[1] = message.length() & 0xFF00;
+	sendBuffer[2] = message.length() & 0x00FF;
+	char* tmpSendBuffer = sendBuffer + 3;
+	strncpy(tmpSendBuffer, message.c_str(), 1021);
+	int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	if (bytesSent == 0)
+	{
+		return;
+	}
 }

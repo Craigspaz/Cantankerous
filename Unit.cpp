@@ -435,3 +435,8 @@ void Unit::unlock()
 {
 	mutex.unlock();
 }
+
+Tile* Unit::getCurrentTile()
+{
+	return this->currentTile;
+}

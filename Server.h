@@ -48,6 +48,7 @@ private:
 	{
 		Unit* unit;
 		Tile* destinationTile;
+		Unit* targetEnemy;
 	};
 
 	std::list<UnitPathFindingStruct>* pathFindingQueue;
