@@ -98,7 +98,6 @@ void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 		}
 	}
 
-	// TODO: Pathfinding
 	if (!path->empty() && this->isMovingAlongPath)
 	{
 		if (targetUnit != NULL && currentTile != NULL && targetUnit->getCurrentTile() != NULL)
@@ -190,6 +189,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x > 0 && currentTile->getGridPosition().y > 0)
 			{
 				neighbors[0] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y - 1];
+				if (neighbors[0]->isOccupied())
+				{
+					neighbors[0] = NULL;
+				}
 			}
 			else
 			{
@@ -199,6 +202,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().y > 0)
 			{
 				neighbors[1] = tiles[(int)currentTile->getGridPosition().x][(int)currentTile->getGridPosition().y - 1];
+				if (neighbors[1]->isOccupied())
+				{
+					neighbors[1] = NULL;
+				}
 			}
 			else
 			{
@@ -209,6 +216,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x + 1 < width && currentTile->getGridPosition().y > 0)
 			{
 				neighbors[2] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y - 1];
+				if (neighbors[2]->isOccupied())
+				{
+					neighbors[2] = NULL;
+				}
 			}
 			else
 			{
@@ -219,6 +230,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x > 0)
 			{
 				neighbors[3] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y];
+				if (neighbors[3]->isOccupied())
+				{
+					neighbors[3] = NULL;
+				}
 			}
 			else
 			{
@@ -229,6 +244,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x + 1 < width)
 			{
 				neighbors[4] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y];
+				if (neighbors[4]->isOccupied())
+				{
+					neighbors[4] = NULL;
+				}
 			}
 			else
 			{
@@ -239,6 +258,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x > 0 && currentTile->getGridPosition().y + 1 < height)
 			{
 				neighbors[5] = tiles[(int)currentTile->getGridPosition().x - 1][(int)currentTile->getGridPosition().y + 1];
+				if (neighbors[5]->isOccupied())
+				{
+					neighbors[5] = NULL;
+				}
 			}
 			else
 			{
@@ -249,6 +272,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().y + 1 < height)
 			{
 				neighbors[6] = tiles[(int)currentTile->getGridPosition().x][(int)currentTile->getGridPosition().y + 1];
+				if (neighbors[6]->isOccupied())
+				{
+					neighbors[6] = NULL;
+				}
 			}
 			else
 			{
@@ -259,6 +286,10 @@ std::list<Tile*>* Unit::findPath(Tile*** tiles, Tile* endTile, int width, int he
 			if (currentTile->getGridPosition().x + 1 < width && currentTile->getGridPosition().y + 1 < height)
 			{
 				neighbors[7] = tiles[(int)currentTile->getGridPosition().x + 1][(int)currentTile->getGridPosition().y + 1];
+				if (neighbors[7]->isOccupied())
+				{
+					neighbors[7] = NULL;
+				}
 			}
 			else
 			{
@@ -376,6 +407,10 @@ bool Unit::isMoving()
 
 void Unit::setDestination(Tile* tile, Level* level)
 {
+	if (tile->isOccupied())
+	{
+		return;
+	}
 	isMovingAlongPath = true;
 	Tile*** copyOfTiles = new Tile**[level->getWidth()];
 	for (int x = 0; x < level->getWidth(); x++)
@@ -388,6 +423,7 @@ void Unit::setDestination(Tile* tile, Level* level)
 	for (std::vector<Tile*>::iterator i = level->getTiles()->begin(); i != level->getTiles()->end(); i++)
 	{
 		copyOfTiles[x][y] = new Tile((*i)->getPosition(), this->manager, (*i)->getType(), (*i)->getScale());
+		copyOfTiles[x][y]->setOccupied((*i)->isOccupied());
 		copyOfTiles[x][y]->setGridPosition((*i)->getGridPosition());
 		if (tile->getGridPosition().x == copyOfTiles[x][y]->getGridPosition().x && tile->getGridPosition().y == copyOfTiles[x][y]->getGridPosition().y)
 		{

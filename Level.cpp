@@ -63,6 +63,7 @@ void Level::loadLevel()
 			{
 				Tile* tile = new Tile(Ogre::Vector3(i, 0, row), sceneManager, DIRT_TILE, scale);
 				tile->setGridPosition(Ogre::Vector2(i, row));
+				tile->setOccupied(true);
 				tiles->push_back(tile);
 				maxCorner = tile->getPosition();
 			}

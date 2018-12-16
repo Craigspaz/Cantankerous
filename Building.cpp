@@ -31,6 +31,7 @@ Building::Building(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int
 	sizeOfQueue = 0;
 	maxSizeOfBuildQueue = MAX_SIZE_OF_BUILD_QUEUE;
 	ticksPassed = 0;
+	health = 200;
 }
 
 
@@ -178,7 +179,6 @@ void Building::setQueue(std::vector<int> queue)
 {
 	lock();
 	buildQueueLock.lock();
-	//buildQueue->clear();
 	sizeOfQueue = 0;
 	for (auto item : queue)
 	{
@@ -198,4 +198,10 @@ void Building::lock()
 void Building::unlock()
 {
 	mutex.unlock();
+}
+
+
+void Building::takeDamage(int damage)
+{
+	health -= damage;
 }

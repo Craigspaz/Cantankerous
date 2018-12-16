@@ -31,6 +31,7 @@ public:
 	int* getQueue();
 	int getCurrentSizeOfQueue();
 	void setQueue(std::vector<int> queue);
+	void takeDamage(int damage);
 
 	void lock();
 	void unlock();
@@ -51,6 +52,7 @@ private:
 	int ticksPassed;
 
 	std::mutex mutex;
+	int health;
 };
 
 #endif
