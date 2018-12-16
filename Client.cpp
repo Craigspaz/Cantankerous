@@ -10,6 +10,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	localCopyOfBuildings = new std::vector<Building*>();
 	buildingsToUpdate = new std::vector<BuildingsToUpdateData>();
 	localCopyOfProjectiles = new std::vector<Projectile*>();
+	projectilesToUpdate = new std::vector<ProjectilesToUpdate>();
 	this->sceneManager = sceneManager;
 	this->game = game;
 	this->selectedUnit = NULL;
@@ -136,6 +137,7 @@ Client::~Client()
 		delete projectile;
 	}
 	delete localCopyOfProjectiles;
+	delete projectilesToUpdate;
 }
 
 
@@ -356,6 +358,7 @@ void Client::receiveMessages()
 			bool inDestinationX = false;
 			bool inDestinationY = false;
 			bool inDestinationZ = false;
+			bool inAlive = false;
 
 			int id = -1;
 			Ogre::Vector3 position(0, 0, 0);
@@ -364,6 +367,7 @@ void Client::receiveMessages()
 			Ogre::Vector3 destination(0, 0, 0);
 			int playerID = 0;
 			int type = UNIT_TANK;
+			bool isAlive = true;
 
 			char* tmpStart1 = buffer + 3;
 			char* token = strtok(tmpStart1, ">");
@@ -466,6 +470,11 @@ void Client::receiveMessages()
 					inDestinationZ = true;
 					setFlag = true;
 				}
+				else if (tmp == "<Alive")
+				{
+					inAlive = true;
+					setFlag = true;
+				}
 
 				if (!setFlag)
 				{
@@ -548,6 +557,20 @@ void Client::receiveMessages()
 						inDestinationZ = false;
 						inDestination = false;
 					}
+					else if (inAlive)
+					{
+						int val = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						if (val == 0)
+						{
+							isAlive = true;
+						}
+						else
+						{
+							isAlive = false;
+						}
+						
+						inAlive = false;
+					}
 				}
 				token = strtok(NULL, ">");
 			}
@@ -559,6 +582,7 @@ void Client::receiveMessages()
 				data.position = position;
 				data.directionFacing = directionFacing;
 				data.type = type;
+				data.isAlive = isAlive;
 
 				unitsToUpdateLock.lock();
 				unitsToUpdate->push_back(data);
@@ -704,6 +728,112 @@ void Client::receiveMessages()
 				buildingsToUpdateLock.unlock();
 			}
 		}
+		else if (buffer[0] == 0x06)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
+
+			bool inID = false;
+			bool inPosition = false;
+			bool inPositionX = false;
+			bool inPositionY = false;
+			bool inPositionZ = false;
+			bool inPlayerID = false;
+			bool inIsDestroyed = false;
+
+			int id = -1;
+			Ogre::Vector3 position(-1, -1, -1);
+			int playerID = -1;
+			bool isDestroyed = false;
+
+			char* token = strtok(tmpStart, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Position")
+				{
+					inPosition = true;
+					setFlag = true;
+				}
+				else if (tmp == "<X" && inPosition)
+				{
+					inPositionX = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Y" && inPosition)
+				{
+					inPositionY = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Z" && inPosition)
+				{
+					inPositionZ = true;
+					setFlag = true;
+				}
+				else if (tmp == "<PlayerID")
+				{
+					inPlayerID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<Alive")
+				{
+					inIsDestroyed = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inPositionX)
+					{
+						position.x = std::atof(tmp.substr(0, tmp.find("</X")).c_str());
+						inPositionX = false;
+					}
+					else if (inPositionY)
+					{
+						position.y = std::atof(tmp.substr(0, tmp.find("</Y")).c_str());
+						inPositionY = false;
+					}
+					else if (inPositionZ)
+					{
+						position.z = std::atof(tmp.substr(0, tmp.find("</Z")).c_str());
+						inPositionZ = false;
+						inPosition = false;
+					}
+					else if (inPlayerID)
+					{
+						playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+						inPlayerID = false;
+					}
+					else if (inIsDestroyed)
+					{
+						isDestroyed = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						inIsDestroyed = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			ProjectilesToUpdate data;
+			data.id = id;
+			data.position = position;
+			data.playerID = playerID;
+			data.isDestroyed = isDestroyed;
+
+			projectilesToUpdateLock.lock();
+			projectilesToUpdate->push_back(data);
+			projectilesToUpdateLock.unlock();
+		}
+
 	}
 }
 
@@ -718,6 +848,10 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		{
 			if (realUnit->getUnitID() == unit.id)
 			{
+				if (unit.isAlive == false)
+				{
+					realUnit->setDead(true);
+				}
 				realUnit->setPosition(unit.position);
 				realUnit->setPlayerControlledBy(unit.playerID);
 				realUnit->setOrientation(Ogre::Vector3::UNIT_Z.getRotationTo(unit.directionFacing));
@@ -725,7 +859,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 				break;
 			}
 		}
-		if (foundUnitToUpdate == false)
+		if (foundUnitToUpdate == false && unit.isAlive == true)
 		{
 			if (unit.type == UNIT_TANK)
 			{
@@ -791,6 +925,78 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	}
 	buildingsToUpdate->clear();
 	buildingsToUpdateLock.unlock();
+
+	projectilesToUpdateLock.lock();
+	for (auto projectile : *projectilesToUpdate)
+	{
+		bool foundProjectile = false;
+		projectilesLock.lock();
+		for (auto realProjectile : *localCopyOfProjectiles)
+		{
+			if (realProjectile->getID() == projectile.id)
+			{
+				if (projectile.isDestroyed)
+				{
+					realProjectile->setDestroyed(true);
+				}
+				realProjectile->setPosition(projectile.position);
+				foundProjectile = true;
+				break;
+			}
+		}
+		if (!foundProjectile)
+		{
+			Projectile* p = new Projectile(projectile.position, 0, 0, this->sceneManager, 0, projectile.playerID, false, projectile.id);
+			localCopyOfProjectiles->push_back(p);
+			if (clientMode == CLIENT_MODE_PASSIVE)
+			{
+				p->setVisible(false);
+			}
+		}
+		projectilesLock.unlock();
+	}
+	projectilesToUpdate->clear();
+	projectilesToUpdateLock.unlock();
+
+	unitsLock.lock();
+	while (true)
+	{
+		bool gotThrough = true;
+		for (auto iterator = localCopyOfUnits->begin(); iterator != localCopyOfUnits->end(); iterator++)
+		{
+			if ((*iterator)->isDead())
+			{
+				iterator = localCopyOfUnits->erase(iterator);
+				gotThrough = false;
+				break;
+			}
+		}
+		if (gotThrough)
+		{
+			break;
+		}
+	}
+	unitsLock.unlock();
+
+	projectilesLock.lock();
+	while (true)
+	{
+		bool gotThrough = true;
+		for (auto iterator = localCopyOfProjectiles->begin(); iterator != localCopyOfProjectiles->end(); iterator++)
+		{
+			if ((*iterator)->isDestroyed())
+			{
+				iterator = localCopyOfProjectiles->erase(iterator);
+				gotThrough = false;
+				break;
+			}
+		}
+		if (gotThrough)
+		{
+			break;
+		}
+	}
+	projectilesLock.unlock();
 
 	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{

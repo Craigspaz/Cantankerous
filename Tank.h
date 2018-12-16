@@ -21,6 +21,8 @@ private:
 	Ogre::SceneNode* baseNode;
 	Ogre::Entity* turret;
 	Ogre::Entity* base;
+	int firingCoolOffAmount;
+	int currentTicks;
 };
 
 #endif

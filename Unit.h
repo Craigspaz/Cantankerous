@@ -38,6 +38,10 @@ public:
 
 	virtual void attack(std::vector<Projectile*>* projectiles) = 0;
 
+	void takeDamage(double amount);
+	bool isDead();
+	void setDead(bool a);
+
 
 	void lock();
 	void unlock();
@@ -63,6 +67,7 @@ protected:
 	Unit* targetUnit;
 	int shootingRange;
 	bool inRange;
+	bool dead;
 
 private:
 	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);

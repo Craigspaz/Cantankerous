@@ -25,6 +25,8 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	// For debugging
 	//this->turretNode->showBoundingBox(true);
 	//this->baseNode->showBoundingBox(true);
+	currentTicks = 120;
+	firingCoolOffAmount = 120;
 }
 
 
@@ -46,10 +48,17 @@ Tank::~Tank()
 
 void Tank::attack(std::vector<Projectile*>* projectiles)
 {
-	if (this->targetUnit != NULL)
+	if (this->targetUnit != NULL && currentTicks >= firingCoolOffAmount)
 	{
 		// fire projectile at target
-		
+		Projectile* projectile = new Projectile(this->getPosition(), this->damage + rand() % 30, 0.1, this->manager, 4, false, this->controlledByPlayerNumber);
+		projectiles->push_back(projectile);
+		projectile->setTarget(targetUnit);
+		currentTicks = 0;
+	}
+	else
+	{
+		currentTicks++;
 	}
 }
 

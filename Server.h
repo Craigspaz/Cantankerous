@@ -30,6 +30,8 @@ private:
 	void addUnit(Unit* unit);
 	void addBuilding(Building* building);
 
+	void sendProjectileToClient(Projectile* projectile);
+
 	std::vector<SOCKET>* sockets;
 
 	std::vector<Unit*>* units;

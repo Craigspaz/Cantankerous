@@ -36,6 +36,7 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	targetUnit = NULL;
 	shootingRange = 3;
 	inRange = false;
+	dead = false;
 }
 
 
@@ -57,6 +58,11 @@ Ogre::Vector3 Unit::getPosition()
 
 void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 {
+	if (this->health <= 0)
+	{
+		this->setVisible(false);
+		this->dead = true;
+	}
 	if (currentTile == NULL)
 	{
 		for (auto tile : *(level->getTiles()))
@@ -74,12 +80,17 @@ void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 		}
 	}
 
-	if (inRange && targetUnit != NULL)
+	if (inRange && targetUnit != NULL && path->empty() && !this->isMovingAlongPath)
 	{
 		Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
 		if (diff.length() <= this->shootingRange)
 		{
 			attack(projectiles);
+			if (targetUnit->isDead())
+			{
+				targetUnit = NULL;
+				inRange = false;
+			}
 		}
 		else
 		{
@@ -474,4 +485,21 @@ Tile* Unit::getCurrentTile()
 void Unit::setTarget(Unit* unit)
 {
 	this->targetUnit = unit;
+}
+
+
+void Unit::takeDamage(double amount)
+{
+	this->health -= amount;
+}
+
+bool Unit::isDead()
+{
+	return this->dead;
+}
+
+
+void Unit::setDead(bool a)
+{
+	this->dead = a;
 }
