@@ -33,8 +33,9 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->health = 100;
 	this->damage = 10;
 	selectionNode = NULL;
-	target = NULL;
+	targetUnit = NULL;
 	shootingRange = 3;
+	inRange = false;
 }
 
 
@@ -54,7 +55,7 @@ Ogre::Vector3 Unit::getPosition()
 	return node->getPosition();
 }
 
-void Unit::update(Level* level)
+void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 {
 	if (currentTile == NULL)
 	{
@@ -73,18 +74,32 @@ void Unit::update(Level* level)
 		}
 	}
 
+	if (inRange && targetUnit != NULL)
+	{
+		Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
+		if (diff.length() <= this->shootingRange)
+		{
+			attack(projectiles);
+		}
+		else
+		{
+			inRange = false;
+		}
+	}
+
 	// TODO: Pathfinding
 	if (!path->empty() && this->isMovingAlongPath)
 	{
-		if (target != NULL && currentTile != NULL && target->getCurrentTile() != NULL)
+		if (targetUnit != NULL && currentTile != NULL && targetUnit->getCurrentTile() != NULL)
 		{
-			Ogre::Vector2 diff = currentTile->getGridPosition() - target->getCurrentTile()->getGridPosition();
+			Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
 			if (diff.length() <= this->shootingRange)
 			{
 				// target in range start firing.
 
 				path->clear();
 				this->isMovingAlongPath = false;
+				inRange = true;
 				return;
 			}
 		}
@@ -458,5 +473,5 @@ Tile* Unit::getCurrentTile()
 
 void Unit::setTarget(Unit* unit)
 {
-	this->target = unit;
+	this->targetUnit = unit;
 }

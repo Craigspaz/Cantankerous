@@ -57,6 +57,10 @@ private:
 	std::vector<Building*>* buildings;
 	std::mutex buildingsLock;
 
+
+	std::vector<Projectile*>* projectiles;
+	std::mutex projectilesLock;
+
 };
 
 #endif

@@ -83,6 +83,10 @@ private:
 	std::mutex selectedUnitLock;
 	std::mutex selectedBuildingLock;
 
+
+	std::vector<Projectile*>* localCopyOfProjectiles;
+	std::mutex projectilesLock;
+
 };
 
 #endif

@@ -9,9 +9,8 @@ public:
 	Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int controlledByPlayerNumber, int id=-1);
 	~Tank();
 
-	virtual void update(Level* level);
-	void attack(Unit* target);
-	//void attack(Building* building); // may need to change
+	virtual void update(Level* level, std::vector<Projectile*>* projectiles);
+	virtual void attack(std::vector<Projectile*>* projectiles);
 
 	Ogre::Entity* getTurretEntity();
 	Ogre::Entity* getBaseEntity();

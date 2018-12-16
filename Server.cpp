@@ -14,6 +14,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	sockets = new std::vector<SOCKET>();
 	pathFindingQueue = new std::list<UnitPathFindingStruct>();
 	buildings = new std::vector<Building*>();
+	projectiles = new std::vector<Projectile*>();
 	numberOfPlayers = 1;
 
 	sock = Messages::createSocket();
@@ -37,6 +38,23 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 
 Server::~Server()
 {
+	for (auto unit : *units)
+	{
+		delete unit;
+	}
+	delete units;
+	delete sockets;
+	delete pathFindingQueue;
+	for (auto building : *buildings)
+	{
+		delete building;
+	}
+	delete buildings;
+	for (auto projectile : *projectiles)
+	{
+		delete projectile;
+	}
+	delete projectiles;
 }
 
 
@@ -46,7 +64,7 @@ void Server::update()
 	for (auto unit : *units)
 	{
 		//unit->setPosition(unit->getPosition() + Ogre::Vector3(0.05, 0, 0));
-		unit->update(game->getCurrentLevel());
+		unit->update(game->getCurrentLevel(), projectiles);
 
 		// tmp
 		//if (unit->isMoving() == false && unit->getPosition().x == 0 && unit->getPosition().z == 0)
@@ -82,7 +100,7 @@ void Server::update()
 			{
 				std::cout << "Creating tank..." << std::endl;
 				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, 1);
-				tank->update(game->getCurrentLevel());
+				tank->update(game->getCurrentLevel(), projectiles);
 				tank->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
 				addUnit(tank);
 			}

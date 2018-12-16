@@ -28,9 +28,11 @@ Tank::Tank(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 }
 
 
-void Tank::update(Level* level)
+void Tank::update(Level* level, std::vector<Projectile*>* projectiles)
 {
-	Unit::update(level);
+	Unit::update(level, projectiles);
+
+	//TODO handle rotating turret
 }
 
 Tank::~Tank()
@@ -42,9 +44,13 @@ Tank::~Tank()
 }
 
 
-void Tank::attack(Unit* target)
+void Tank::attack(std::vector<Projectile*>* projectiles)
 {
-
+	if (this->targetUnit != NULL)
+	{
+		// fire projectile at target
+		
+	}
 }
 
 

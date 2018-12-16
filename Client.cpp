@@ -9,6 +9,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	unitsToUpdate = new std::vector<UnitsToUpdate>();
 	localCopyOfBuildings = new std::vector<Building*>();
 	buildingsToUpdate = new std::vector<BuildingsToUpdateData>();
+	localCopyOfProjectiles = new std::vector<Projectile*>();
 	this->sceneManager = sceneManager;
 	this->game = game;
 	this->selectedUnit = NULL;
@@ -117,10 +118,24 @@ void Client::processInitialMessage(char* message)
 
 Client::~Client()
 {
+	for (auto unit : *localCopyOfUnits)
+	{
+		delete unit;
+	}
 	delete localCopyOfUnits;
 	delete unitsToUpdate;
 	delete localCopyOfBuildings;
 	delete buildingsToUpdate;
+	for (auto building : *localCopyOfBuildings)
+	{
+		delete building;
+	}
+	delete localCopyOfBuildings;
+	for (auto projectile : *localCopyOfProjectiles)
+	{
+		delete projectile;
+	}
+	delete localCopyOfProjectiles;
 }
 
 
