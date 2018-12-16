@@ -105,6 +105,10 @@ void Server::update()
 		{
 			a.unit->setTarget(a.targetEnemy);
 		}
+		else if (a.targetEnemyBuilding != NULL)
+		{
+			a.unit->setTarget(a.targetEnemyBuilding, a.destinationTile);
+		}
 	}
 	pathFindingQueue->clear();
 	pathFindingLock.unlock();
@@ -209,7 +213,6 @@ void Server::waitForMessages(SOCKET sock)
 		{
 			//std::cout << "Received pathfinding request message" << std::endl;
 			buffer[bytesReceived] = '\0';
-			printf("Receiving unit add message\n");
 			char* tmpStart = buffer + 3;
 			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 			bool inID = false;
@@ -292,6 +295,7 @@ void Server::waitForMessages(SOCKET sock)
 			data.unit = selectedUnit;
 			data.destinationTile = endTile;
 			data.targetEnemy = NULL;
+			data.targetEnemyBuilding = NULL;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
@@ -419,6 +423,100 @@ void Server::waitForMessages(SOCKET sock)
 			data.unit = selectedUnit;
 			data.destinationTile = targetEnemy->getCurrentTile();
 			data.targetEnemy = targetEnemy;
+			data.targetEnemyBuilding = NULL;
+			pathFindingLock.lock();
+			pathFindingQueue->push_back(data);
+			pathFindingLock.unlock();
+		}
+		else if (buffer[0] == 0x07)
+		{
+			//std::cout << "Received pathfinding request message" << std::endl;
+			buffer[bytesReceived] = '\0';
+			printf("Receiving unit add message\n");
+			char* tmpStart = buffer + 3;
+			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+			bool inID = false;
+			bool inEnemyID = false;
+
+			int id = -1;
+			int enemyID = -1;
+
+			char* tmpStart1 = buffer + 3;
+			char* token = strtok(tmpStart1, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<UnitID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<EnemyBuildingID")
+				{
+					inEnemyID = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inEnemyID)
+					{
+						enemyID = std::atoi(tmp.substr(0, tmp.find("</EnemyBuildingID")).c_str());
+						inEnemyID = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			Unit* selectedUnit = NULL;
+			Building* targetEnemyBuilding = NULL;
+			unitsLock.lock();
+			for (auto unit : *units)
+			{
+				if (unit->getUnitID() == id)
+				{
+					selectedUnit = unit;
+					break;
+				}
+			}
+			unitsLock.unlock();
+			
+			buildingsLock.lock();
+			for (auto building : *buildings)
+			{
+				if (building->getID() == id)
+				{
+					targetEnemyBuilding = building;
+					break;
+				}
+			}
+			buildingsLock.unlock();
+
+			Tile* currentTile = NULL;
+			for (auto tile : *(game->getCurrentLevel()->getTiles()))
+			{
+				Ogre::Vector3 currentPosition = targetEnemyBuilding->getPosition();
+				Ogre::Vector3 tilesPosition = tile->getPosition();
+				if (currentPosition.x > tilesPosition.x - (tile->getScale() / 2) && currentPosition.x < tilesPosition.x + (tile->getScale() / 2)) // if x
+				{
+					if (currentPosition.z > tilesPosition.z - (tile->getScale() / 2) && currentPosition.z < tilesPosition.z + (tile->getScale() / 2)) // if y
+					{
+						currentTile = tile;
+						break;
+					}
+				}
+			}
+
+			UnitPathFindingStruct data;
+			data.unit = selectedUnit;
+			data.destinationTile = currentTile;
+			data.targetEnemy = NULL;
+			data.targetEnemyBuilding = targetEnemyBuilding;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();

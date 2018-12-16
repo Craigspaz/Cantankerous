@@ -281,7 +281,13 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							if (!foundEnemy)
 							{
 								buildingsLock.lock();
-
+								for (auto building : *localCopyOfBuildings)
+								{
+									if (res == building->getEntity() && building->getControllingPlayerID() != this->playerID)
+									{
+										tellServerToDeterminePathAndLockOnToTargetBuilding(building->getID(), selectedUnit->getUnitID());
+									}
+								}
 								buildingsLock.unlock();
 								Tile* endTile = NULL;
 								for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
@@ -1072,6 +1078,23 @@ void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int uni
 	char sendBuffer[1024];
 	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
 	sendBuffer[0] = 0x05;
+	sendBuffer[1] = message.length() & 0xFF00;
+	sendBuffer[2] = message.length() & 0x00FF;
+	char* tmpSendBuffer = sendBuffer + 3;
+	strncpy(tmpSendBuffer, message.c_str(), 1021);
+	int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	if (bytesSent == 0)
+	{
+		return;
+	}
+}
+
+
+void Client::tellServerToDeterminePathAndLockOnToTargetBuilding(int buildingID, int unitID)
+{
+	char sendBuffer[1024];
+	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyBuildingID>" + std::to_string(buildingID) + "</EnemyBuildingID>";
+	sendBuffer[0] = 0x07;
 	sendBuffer[1] = message.length() & 0xFF00;
 	sendBuffer[2] = message.length() & 0x00FF;
 	char* tmpSendBuffer = sendBuffer + 3;

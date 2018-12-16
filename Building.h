@@ -32,6 +32,7 @@ public:
 	int getCurrentSizeOfQueue();
 	void setQueue(std::vector<int> queue);
 	void takeDamage(int damage);
+	bool isDestroyed();
 
 	void lock();
 	void unlock();
@@ -53,6 +54,7 @@ private:
 
 	std::mutex mutex;
 	int health;
+	bool destroyed;
 };
 
 #endif

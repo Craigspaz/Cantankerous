@@ -1,4 +1,5 @@
 #include "Unit.h"
+#include "Building.h"
 
 
 int getID() // return a unique name
@@ -37,6 +38,8 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	shootingRange = 5;
 	inRange = false;
 	dead = false;
+	targetBuilding = NULL;
+	targetBuildingTile = NULL;
 }
 
 
@@ -98,11 +101,42 @@ void Unit::update(Level* level, std::vector<Projectile*>* projectiles)
 		}
 	}
 
+	if (inRange && targetBuilding != NULL && path->empty() && !this->isMovingAlongPath && targetBuildingTile != NULL)
+	{
+		Ogre::Vector2 diff = currentTile->getGridPosition() - targetBuildingTile->getGridPosition();
+		if (diff.length() <= this->shootingRange)
+		{
+			attack(projectiles);
+			if (targetBuilding->isDestroyed())
+			{
+				targetBuilding = NULL;
+				inRange = false;
+			}
+		}
+		else
+		{
+			inRange = false;
+		}
+	}
+
 	if (!path->empty() && this->isMovingAlongPath)
 	{
 		if (targetUnit != NULL && currentTile != NULL && targetUnit->getCurrentTile() != NULL)
 		{
 			Ogre::Vector2 diff = currentTile->getGridPosition() - targetUnit->getCurrentTile()->getGridPosition();
+			if (diff.length() <= this->shootingRange)
+			{
+				// target in range start firing.
+
+				path->clear();
+				this->isMovingAlongPath = false;
+				inRange = true;
+				return;
+			}
+		}
+		if (targetBuilding != NULL && currentTile != NULL && targetBuildingTile != NULL)
+		{
+			Ogre::Vector2 diff = currentTile->getGridPosition() - targetBuildingTile->getGridPosition();
 			if (diff.length() <= this->shootingRange)
 			{
 				// target in range start firing.
@@ -521,6 +555,13 @@ Tile* Unit::getCurrentTile()
 void Unit::setTarget(Unit* unit)
 {
 	this->targetUnit = unit;
+}
+
+
+void Unit::setTarget(Building* building, Tile* tile)
+{
+	this->targetBuilding = building;
+	this->targetBuildingTile = tile;
 }
 
 
