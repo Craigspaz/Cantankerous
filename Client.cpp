@@ -560,7 +560,7 @@ void Client::receiveMessages()
 					else if (inAlive)
 					{
 						int val = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
-						if (val == 0)
+						if (val == 1)
 						{
 							isAlive = true;
 						}
@@ -817,7 +817,15 @@ void Client::receiveMessages()
 					}
 					else if (inIsDestroyed)
 					{
-						isDestroyed = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						int val = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						if (val == 1)
+						{
+							isDestroyed = true;
+						}
+						else
+						{
+							isDestroyed = false;
+						}
 						inIsDestroyed = false;
 					}
 				}
@@ -966,6 +974,11 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		{
 			if ((*iterator)->isDead())
 			{
+				if (selectedUnit == *iterator)
+				{
+					selectedUnit = NULL;
+				}
+				delete *iterator;
 				iterator = localCopyOfUnits->erase(iterator);
 				gotThrough = false;
 				break;
@@ -986,6 +999,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		{
 			if ((*iterator)->isDestroyed())
 			{
+				delete *iterator;
 				iterator = localCopyOfProjectiles->erase(iterator);
 				gotThrough = false;
 				break;

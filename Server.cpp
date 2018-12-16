@@ -461,7 +461,7 @@ void Server::sendUnitToClients(Unit* unit)
 	message += std::to_string(unit->getType());
 	message += "</Type>";
 	message += "<Alive>";
-	message += std::to_string(unit->isDead());
+	message += std::to_string(!unit->isDead());
 	message += "</Alive>";
 	unit->unlock();
 	unsigned short length = message.length();
@@ -558,7 +558,7 @@ void Server::sendProjectileToClient(Projectile* projectile)
 	message += std::to_string(projectile->getControllingPlayer());
 	message += "</PlayerID>";
 	message += "<Alive>";;
-	message += std::to_string(projectile->isDestroyed());
+	message += std::to_string(!projectile->isDestroyed());
 	message += "</Alive>";
 
 	unsigned short length = message.length();

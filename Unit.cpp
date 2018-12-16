@@ -34,7 +34,7 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->damage = 10;
 	selectionNode = NULL;
 	targetUnit = NULL;
-	shootingRange = 3;
+	shootingRange = 5;
 	inRange = false;
 	dead = false;
 }
