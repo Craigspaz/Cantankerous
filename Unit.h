@@ -32,6 +32,9 @@ public:
 	Ogre::Vector3 getDirectionMoving();
 	virtual void setVisible(bool value) = 0;
 	void setSelected(bool value);
+	Tile* getCurrentTile();
+	void setTarget(Unit* unit);
+
 
 	void lock();
 	void unlock();
@@ -53,6 +56,9 @@ protected:
 	Ogre::Vector3 directionMoving;
 
 	std::mutex mutex;
+
+	Unit* target;
+	int shootingRange;
 
 private:
 	std::list<Tile*>* findPath(Tile*** tiles, Tile* endTile, int width, int height);

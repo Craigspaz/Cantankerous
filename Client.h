@@ -53,10 +53,12 @@ private:
 	void getInitialInfo();
 	void receiveMessages();
 	void tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords);
+	void tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID);
 
 	SOCKET sock;
 	struct sockaddr_in connection;
 	Game* game;
+	int playerID;
 	Ogre::SceneManager* sceneManager;
 	std::thread* messageRecievingThread;
 

@@ -16,6 +16,7 @@ Client::Client(std::string ip, int port, Game* game, Ogre::SceneManager* sceneMa
 	inet_pton(AF_INET, ip.c_str(), &(connection.sin_addr.s_addr));
 	connection.sin_family = AF_INET;
 	connection.sin_port = htons(port);
+	playerID = -1;
 	if (Messages::connectToServer(sock, connection) != 0)
 	{
 		printf("Failed to initialze connection to server. Closing game. Please try again later\n");
@@ -84,6 +85,7 @@ void Client::processInitialMessage(char* message)
 	char* token = strtok(message, ">");
 
 	bool foundLevelTag = false;
+	bool foundPlayerID = false;
 	while (token != NULL)
 	{
 		std::string tmp = token;
@@ -91,13 +93,22 @@ void Client::processInitialMessage(char* message)
 		{
 			foundLevelTag = true;
 		}
+		else if (tmp == "<PlayerID")
+		{
+			foundPlayerID = true;
+		}
 		else if (foundLevelTag)
 		{
-			std::string path = __FILE__; //gets the current cpp file's path with the cpp file
-			path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
+			//std::string path = __FILE__; //gets the current cpp file's path with the cpp file
+			//path = path.substr(0, 1 + path.find_last_of('\\')); //removes filename to leave path
 			std::string fileName = tmp.substr(0, tmp.find("</Level"));
-			game->setLevel(new Level(path, fileName, sceneManager));
+			game->setLevel(new Level("./", fileName, sceneManager));
 			foundLevelTag = false;
+		}
+		else if (foundPlayerID)
+		{
+			playerID = std::atoi(tmp.substr(0, tmp.find("</PlayerID")).c_str());
+			foundPlayerID = false;
 		}
 
 		token = strtok(NULL, ">");
@@ -179,7 +190,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						unitsLock.lock();
 						for (auto unit : *localCopyOfUnits)
 						{
-							if (unit->getType() == UNIT_TANK)
+							if (unit->getType() == UNIT_TANK && unit->getPlayerControlledBy() == this->playerID)
 							{
 								Tank* tank = (Tank*)unit;
 								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
@@ -235,18 +246,36 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						selectedUnitLock.lock();
 						if (selectedUnit != NULL)
 						{
-							Tile* endTile = NULL;
-							for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
+							bool foundEnemy = false;
+							unitsLock.lock();
+							for (auto unit : *localCopyOfUnits)
 							{
-								if ((*j)->getEntity() == res)
+								Tank* tank = (Tank*)unit;
+								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())
 								{
-									endTile = *j;
-									break;
+									if (unit->getPlayerControlledBy() != this->playerID)
+									{
+										tellServerToDeterminePathAndLockOnToTarget(unit->getUnitID(), selectedUnit->getUnitID());
+										foundEnemy = true;
+									}
 								}
 							}
-							if (endTile != NULL)
+							unitsLock.unlock();
+							if (!foundEnemy)
 							{
-								tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
+								Tile* endTile = NULL;
+								for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
+								{
+									if ((*j)->getEntity() == res)
+									{
+										endTile = *j;
+										break;
+									}
+								}
+								if (endTile != NULL)
+								{
+									tellServerToDeterminePath(selectedUnit->getUnitID(), endTile->getGridPosition());
+								}
 							}
 						}
 						selectedUnitLock.unlock();
@@ -778,8 +807,6 @@ void Client::tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords)
 	}
 }
 
-
-
 void Client::tellClientUserAskedToQueueUnit(int type)
 {
 	std::cout << "Sending queue up message to server" << std::endl;
@@ -799,4 +826,21 @@ void Client::tellClientUserAskedToQueueUnit(int type)
 		int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
 	}
 	selectedBuildingLock.unlock();
+}
+
+
+void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID)
+{
+	char sendBuffer[1024];
+	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
+	sendBuffer[0] = 0x05;
+	sendBuffer[1] = message.length() & 0xFF00;
+	sendBuffer[2] = message.length() & 0x00FF;
+	char* tmpSendBuffer = sendBuffer + 3;
+	strncpy(tmpSendBuffer, message.c_str(), 1021);
+	int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	if (bytesSent == 0)
+	{
+		return;
+	}
 }

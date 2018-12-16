@@ -13,6 +13,7 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 {
 	Ogre::SceneNode* sceneNode = sceneManager->getRootSceneNode()->createChildSceneNode();
 	this->node = sceneNode;
+	this->node->setPosition(position);
 	this->manager = sceneManager;
 	this->controlledByPlayerNumber = controlledByPlayerNumber;
 	this->type = type;
@@ -32,6 +33,8 @@ Unit::Unit(Ogre::Vector3 position, Ogre::SceneManager* sceneManager, int control
 	this->health = 100;
 	this->damage = 10;
 	selectionNode = NULL;
+	target = NULL;
+	shootingRange = 3;
 }
 
 
@@ -73,6 +76,18 @@ void Unit::update(Level* level)
 	// TODO: Pathfinding
 	if (!path->empty() && this->isMovingAlongPath)
 	{
+		if (target != NULL && currentTile != NULL && target->getCurrentTile() != NULL)
+		{
+			Ogre::Vector2 diff = currentTile->getGridPosition() - target->getCurrentTile()->getGridPosition();
+			if (diff.length() <= this->shootingRange)
+			{
+				// target in range start firing.
+
+				path->clear();
+				this->isMovingAlongPath = false;
+				return;
+			}
+		}
 		Tile* nextTile = path->front();
 		if (abs(this->getPosition().x - nextTile->getPosition().x) <= movementSpeed && abs(this->getPosition().z - nextTile->getPosition().z) <= movementSpeed)
 		{
@@ -433,4 +448,15 @@ void Unit::lock()
 void Unit::unlock()
 {
 	mutex.unlock();
+}
+
+Tile* Unit::getCurrentTile()
+{
+	return this->currentTile;
+}
+
+
+void Unit::setTarget(Unit* unit)
+{
+	this->target = unit;
 }

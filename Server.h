@@ -38,6 +38,8 @@ private:
 
 	std::thread* messageRecievingThread;
 	SOCKET sock;
+	int numberOfPlayers;
+	std::mutex playerLock;
 	struct sockaddr_in connection;
 	Game* game;
 	Ogre::SceneManager* sceneManager;
@@ -46,6 +48,7 @@ private:
 	{
 		Unit* unit;
 		Tile* destinationTile;
+		Unit* targetEnemy;
 	};
 
 	std::list<UnitPathFindingStruct>* pathFindingQueue;

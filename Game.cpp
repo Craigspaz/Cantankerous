@@ -151,6 +151,16 @@ std::string Game::getCurrentLevelFileName()
 
 void Game::buttonHit(Button* button)
 {
+	if (button->getName() == "Resume")
+	{
+		trayManager->destroyAllWidgets();
+		return;
+	}
+	else if (button->getName() == "Exit")
+	{
+		exit(0);
+	}
+
 	if (gameMode == 1 || gameMode == 2)
 	{
 		if (button->getName() == "SpawnTank")
@@ -188,14 +198,6 @@ void Game::buttonHit(Button* button)
 		else if (button->getName() == "Submit")
 		{
 			joinGame();
-		}
-		else if (button->getName() == "Resume")
-		{
-			trayManager->destroyAllWidgets();
-		}
-		else if (button->getName() == "Exit")
-		{
-			exit(0);
 		}
 	}
 }
