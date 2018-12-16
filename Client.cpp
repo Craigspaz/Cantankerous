@@ -190,7 +190,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						unitsLock.lock();
 						for (auto unit : *localCopyOfUnits)
 						{
-							if (unit->getType() == UNIT_TANK)
+							if (unit->getType() == UNIT_TANK && unit->getPlayerControlledBy() == this->playerID)
 							{
 								Tank* tank = (Tank*)unit;
 								if (res == tank->getBaseEntity() || res == tank->getTurretEntity())

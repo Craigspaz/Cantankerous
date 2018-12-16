@@ -14,7 +14,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	sockets = new std::vector<SOCKET>();
 	pathFindingQueue = new std::list<UnitPathFindingStruct>();
 	buildings = new std::vector<Building*>();
-	numberOfPlayers = 1;
+	numberOfPlayers = 0;
 
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
