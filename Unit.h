@@ -35,6 +35,7 @@ public:
 	void setSelected(bool value);
 	Tile* getCurrentTile();
 	void setTarget(Unit* unit);
+	void setTarget(Building* building, Tile* tile);
 
 	virtual void attack(std::vector<Projectile*>* projectiles) = 0;
 
@@ -65,6 +66,9 @@ protected:
 	std::mutex mutex;
 
 	Unit* targetUnit;
+	Building* targetBuilding;
+	Tile* targetBuildingTile;
+
 	int shootingRange;
 	bool inRange;
 	bool dead;

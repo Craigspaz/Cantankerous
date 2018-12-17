@@ -48,6 +48,7 @@ private:
 		int playerID;
 		int type;
 		std::vector<int> queue;
+		bool isDestroyed;
 	};
 
 	struct ProjectilesToUpdate
@@ -63,6 +64,7 @@ private:
 	void receiveMessages();
 	void tellServerToDeterminePath(int unitID, Ogre::Vector2 gridCoords);
 	void tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int unitID);
+	void tellServerToDeterminePathAndLockOnToTargetBuilding(int buildingID, int unitID);
 
 	SOCKET sock;
 	struct sockaddr_in connection;

@@ -99,8 +99,49 @@ void Game::setup()
 	// add a bright light above the scene
 	Light* light1 = sceneManager->createLight();
 	light1->setType(Light::LT_POINT);
-	light1->setPosition(-10, 40, 20);
+	light1->setPosition(-10, 1840, 20);
 	light1->setSpecularColour(ColourValue::White);
+
+	Light* light2 = sceneManager->createLight();
+	light2->setType(Light::LT_POINT);
+	light2->setPosition(400, 1840, 20);
+	light2->setSpecularColour(ColourValue::White);
+
+
+	Light* light3 = sceneManager->createLight();
+	light3->setType(Light::LT_POINT);
+	light3->setPosition(800, 1840, 20);
+	light3->setSpecularColour(ColourValue::White);
+
+
+	Light* light4 = sceneManager->createLight();
+	light4->setType(Light::LT_POINT);
+	light4->setPosition(1200, 1840, 20);
+	light4->setSpecularColour(ColourValue::White);
+
+
+	Light* light5 = sceneManager->createLight();
+	light5->setType(Light::LT_POINT);
+	light5->setPosition(1400, 1840, 20);
+	light5->setSpecularColour(ColourValue::White);
+
+
+	Light* light6 = sceneManager->createLight();
+	light6->setType(Light::LT_POINT);
+	light6->setPosition(1600, 1840, 20);
+	light6->setSpecularColour(ColourValue::White);
+
+
+	Light* light7 = sceneManager->createLight();
+	light7->setType(Light::LT_POINT);
+	light7->setPosition(2000, 1840, 20);
+	light7->setSpecularColour(ColourValue::White);
+
+
+	Light* light8 = sceneManager->createLight();
+	light8->setType(Light::LT_POINT);
+	light8->setPosition(2400, 1840, 20);
+	light8->setSpecularColour(ColourValue::White);
 
 	// Create a test plane to verify everything is working
 	/// TMP
@@ -156,7 +197,7 @@ void Game::buttonHit(Button* button)
 		trayManager->destroyAllWidgets();
 		return;
 	}
-	else if (button->getName() == "Exit")
+	else if (button->getName() == "Exit" || button->getName() == "WinStatus")
 	{
 		exit(0);
 	}
@@ -405,4 +446,10 @@ bool Game::mouseWheelRolled(const MouseWheelEvent& event)
 Level* Game::getCurrentLevel()
 {
 	return currentLevel;
+}
+
+void Game::showWinMessage(std::string message)
+{
+	//trayManager->destroyAllWidgets();
+	//trayManager->createButton(OgreBites::TL_CENTER, "WinStatus", "You Win");
 }

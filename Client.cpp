@@ -237,7 +237,7 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 						buildingsLock.lock();
 						for (auto building : *localCopyOfBuildings)
 						{
-							if (building->getEntity() == res)
+							if (building->getEntity() == res && building->getControllingPlayerID() == this->playerID)
 							{
 								std::cout << "Clicked on a building" << std::endl;
 								selectedBuildingLock.lock();
@@ -280,6 +280,15 @@ void Client::handleClick(Camera* camera, Ogre::Vector3 cameraPosition, OgreBites
 							unitsLock.unlock();
 							if (!foundEnemy)
 							{
+								buildingsLock.lock();
+								for (auto building : *localCopyOfBuildings)
+								{
+									if (res == building->getEntity() && building->getControllingPlayerID() != this->playerID)
+									{
+										tellServerToDeterminePathAndLockOnToTargetBuilding(building->getID(), selectedUnit->getUnitID());
+									}
+								}
+								buildingsLock.unlock();
 								Tile* endTile = NULL;
 								for (std::vector<Tile*>::iterator j = this->game->getCurrentLevel()->getTiles()->begin(); j != this->game->getCurrentLevel()->getTiles()->end(); j++)
 								{
@@ -610,12 +619,14 @@ void Client::receiveMessages()
 			bool inType = false;
 			bool inQueue = false;
 			bool inQueueItem = false;
+			bool inAlive = false;
 
 			int id = -1;
 			Ogre::Vector3 position(-1, -1, -1);
 			int playerID = -1;
 			int type = -1;
 			std::vector<int> queue;
+			bool isDestroyed = false;
 
 			while (token != NULL)
 			{
@@ -666,6 +677,11 @@ void Client::receiveMessages()
 					inQueueItem = true;
 					setFlag = true;
 				}
+				else if (tmp == "<Alive")
+				{
+					inAlive = true;
+					setFlag = true;
+				}
 
 				if (!setFlag)
 				{
@@ -699,6 +715,19 @@ void Client::receiveMessages()
 						type = std::atoi(tmp.substr(0, tmp.find("</Type")).c_str());
 						inType = false;
 					}
+					else if (inAlive)
+					{
+						int val = std::atoi(tmp.substr(0, tmp.find("</Alive")).c_str());
+						if (val == 1)
+						{
+							isDestroyed = true;
+						}
+						else
+						{
+							isDestroyed = false;
+						}
+						inAlive = false;
+					}
 					else if (inQueue && inQueueItem)
 					{
 						queue.push_back(std::atoi(tmp.substr(0, tmp.find("</Item")).c_str()));
@@ -719,6 +748,7 @@ void Client::receiveMessages()
 			data.position = position;
 			data.type = type;
 			data.queue = queue;
+			data.isDestroyed = isDestroyed;
 
 			//std::cout << "Building " << id << " position as received: " << position << std::endl;
 			if (position.x != -1 && position.y != -1 && position.z != -1)
@@ -841,7 +871,46 @@ void Client::receiveMessages()
 			projectilesToUpdate->push_back(data);
 			projectilesToUpdateLock.unlock();
 		}
+		else if (buffer[0] == 0x08)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
 
+			bool inID = false;
+
+			int id = -1;
+
+			char* token = strtok(tmpStart, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			if (id == this->playerID)
+			{
+				std::cout << "You win!" << std::endl;
+				game->showWinMessage("You Win");
+			}
+			else
+			{
+				std::cout << "You Lose!" << std::endl;
+				game->showWinMessage("You Lose");
+			}
+		}
 	}
 }
 
@@ -904,6 +973,11 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 				}
 				b->setPosition(building.position);
 				b->setQueue(building.queue);
+				b->setDestroyed(building.isDestroyed);
+				if (building.isDestroyed)
+				{
+					b->setVisible(false);
+				}
 				foundBuilding = true;
 				break;
 			}
@@ -913,7 +987,7 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 		if (!foundBuilding)
 		{
 			// Note the if statement below is a simple hotfix. This is making the assumption that no buildings have a y position of 0
-			if (building.position.y == 0 || building.id == -1)
+			if (building.position.y == 0 || building.id == -1 || building.isDestroyed)
 			{
 				break;
 			}
@@ -1012,6 +1086,27 @@ void Client::update(Ogre::SceneNode* cameraNode, int clientMode)
 	}
 	projectilesLock.unlock();
 
+	buildingsLock.lock();
+	while (true)
+	{
+		bool gotThrough = true;
+		for (auto iterator = localCopyOfBuildings->begin(); iterator != localCopyOfBuildings->end(); iterator++)
+		{
+			if ((*iterator)->isDestroyed())
+			{
+				delete *iterator;
+				iterator = localCopyOfBuildings->erase(iterator);
+				gotThrough = false;
+				break;
+			}
+		}
+		if (gotThrough)
+		{
+			break;
+		}
+	}
+	buildingsLock.unlock();
+
 	//if (clientMode == CLIENT_MODE_PASSIVE)
 	{
 		//unitsLock.lock();
@@ -1069,6 +1164,23 @@ void Client::tellServerToDeterminePathAndLockOnToTarget(int enemyUnitID, int uni
 	char sendBuffer[1024];
 	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyID>" + std::to_string(enemyUnitID) + "</EnemyID>";
 	sendBuffer[0] = 0x05;
+	sendBuffer[1] = message.length() & 0xFF00;
+	sendBuffer[2] = message.length() & 0x00FF;
+	char* tmpSendBuffer = sendBuffer + 3;
+	strncpy(tmpSendBuffer, message.c_str(), 1021);
+	int bytesSent = Messages::sendMessage(this->sock, sendBuffer, message.length() + 3);
+	if (bytesSent == 0)
+	{
+		return;
+	}
+}
+
+
+void Client::tellServerToDeterminePathAndLockOnToTargetBuilding(int buildingID, int unitID)
+{
+	char sendBuffer[1024];
+	std::string message = "<UnitID>" + std::to_string(unitID) + "</UnitID><EnemyBuildingID>" + std::to_string(buildingID) + "</EnemyBuildingID>";
+	sendBuffer[0] = 0x07;
 	sendBuffer[1] = message.length() & 0xFF00;
 	sendBuffer[2] = message.length() & 0x00FF;
 	char* tmpSendBuffer = sendBuffer + 3;

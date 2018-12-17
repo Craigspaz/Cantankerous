@@ -16,6 +16,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	buildings = new std::vector<Building*>();
 	projectiles = new std::vector<Projectile*>();
 	numberOfPlayers = 1;
+	sentWinMessage = false;
 
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
@@ -26,12 +27,14 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	messageRecievingThread->detach();
 
 	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	Tank* tank = new Tank(Ogre::Vector3(0, 10, 0), this->sceneManager, 1);
-	addUnit(tank);
-	Tank* tank1 = new Tank(Ogre::Vector3(300, 10, 0), this->sceneManager, 2);
-	addUnit(tank1);
 	Building* building = new Building(Ogre::Vector3(0, 20, 0), this->sceneManager, 1, BUILDING_CONSTRUCTOR);
 	addBuilding(building);
+
+	Building* building2 = new Building(Ogre::Vector3(1800, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
+	addBuilding(building2);
+
+	//Building* test2 = new Building(Ogre::Vector3(100, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
+	//addBuilding(test2);
 	
 }
 
@@ -106,6 +109,10 @@ void Server::update()
 		{
 			a.unit->setTarget(a.targetEnemy);
 		}
+		else if (a.targetEnemyBuilding != NULL)
+		{
+			a.unit->setTarget(a.targetEnemyBuilding, a.destinationTile);
+		}
 	}
 	pathFindingQueue->clear();
 	pathFindingLock.unlock();
@@ -119,9 +126,8 @@ void Server::update()
 			if (IDRet == UNIT_TANK)
 			{
 				std::cout << "Creating tank..." << std::endl;
-				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, 1);
+				Tank* tank = new Tank(Ogre::Vector3(building->getPosition().x, 10, building->getPosition().z), this->sceneManager, building->getControllingPlayerID());
 				tank->update(game->getCurrentLevel(), projectiles);
-				tank->setDestination(game->getCurrentLevel()->getTiles()->at(170), game->getCurrentLevel());
 				addUnit(tank);
 			}
 		}
@@ -143,6 +149,7 @@ void Server::update()
 			}
 			if ((*iterator)->isDestroyed())
 			{
+				sendProjectileToClient(*iterator);
 				delete (*iterator);
 				iterator = projectiles->erase(iterator);
 				madeItAllTheWayThrough = false;
@@ -163,6 +170,79 @@ void Server::update()
 	}
 	projectilesLock.unlock();
 
+	buildingsLock.lock();
+	int buildingsIndex = 0;
+	while (true)
+	{
+		bool madeItAllOfTheWayThrough = true;
+		int counter = 0;
+		for (auto iterator = buildings->begin(); iterator != buildings->end(); iterator++)
+		{
+			if (counter != buildingsIndex)
+			{
+				continue;
+			}
+			if ((*iterator)->isDestroyed())
+			{
+				this->sendBuildingToClient(*iterator);
+				delete (*iterator);
+				iterator = buildings->erase(iterator);
+				madeItAllOfTheWayThrough = false;
+				break;
+			}
+		}
+		if (madeItAllOfTheWayThrough)
+		{
+			break;
+		}
+	}
+	buildingsLock.unlock();
+
+
+	if (!sentWinMessage)
+	{
+		bool allUnitsAreOnePlayers = true;
+		bool allBuildingsAreTheSamePlayers = true;
+		int pID = -1;
+		unitsLock.lock();
+		for (auto unit : *units)
+		{
+			if (pID == -1)
+			{
+				pID = unit->getPlayerControlledBy();
+				continue;
+			}
+			if (unit->getPlayerControlledBy() != pID)
+			{
+				allUnitsAreOnePlayers = false;
+				unitsLock.unlock();
+				return;
+			}
+		}
+		unitsLock.unlock();
+		buildingsLock.lock();
+		for (auto building : *buildings)
+		{
+			if (pID == -1)
+			{
+				pID = building->getControllingPlayerID();
+				continue;
+			}
+			if (building->getControllingPlayerID() != pID)
+			{
+				allBuildingsAreTheSamePlayers = false;
+				buildingsLock.unlock();
+				return;
+			}
+		}
+		buildingsLock.unlock();
+		if (allUnitsAreOnePlayers && allBuildingsAreTheSamePlayers)
+		{
+			// Someone wins
+			sendWinMessage(pID);
+			sentWinMessage = true;
+		}
+	}
 }
 
 void Server::listenForConnections()
@@ -211,7 +291,6 @@ void Server::waitForMessages(SOCKET sock)
 		{
 			//std::cout << "Received pathfinding request message" << std::endl;
 			buffer[bytesReceived] = '\0';
-			printf("Receiving unit add message\n");
 			char* tmpStart = buffer + 3;
 			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
 			bool inID = false;
@@ -294,6 +373,7 @@ void Server::waitForMessages(SOCKET sock)
 			data.unit = selectedUnit;
 			data.destinationTile = endTile;
 			data.targetEnemy = NULL;
+			data.targetEnemyBuilding = NULL;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
@@ -421,6 +501,100 @@ void Server::waitForMessages(SOCKET sock)
 			data.unit = selectedUnit;
 			data.destinationTile = targetEnemy->getCurrentTile();
 			data.targetEnemy = targetEnemy;
+			data.targetEnemyBuilding = NULL;
+			pathFindingLock.lock();
+			pathFindingQueue->push_back(data);
+			pathFindingLock.unlock();
+		}
+		else if (buffer[0] == 0x07)
+		{
+			//std::cout << "Received pathfinding request message" << std::endl;
+			buffer[bytesReceived] = '\0';
+			printf("Receiving unit add message\n");
+			char* tmpStart = buffer + 3;
+			//std::cout << std::endl << "Received message: " << std::endl << tmpStart << std::endl;
+			bool inID = false;
+			bool inEnemyID = false;
+
+			int id = -1;
+			int enemyID = -1;
+
+			char* tmpStart1 = buffer + 3;
+			char* token = strtok(tmpStart1, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<UnitID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				else if (tmp == "<EnemyBuildingID")
+				{
+					inEnemyID = true;
+					setFlag = true;
+				}
+
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+					else if (inEnemyID)
+					{
+						enemyID = std::atoi(tmp.substr(0, tmp.find("</EnemyBuildingID")).c_str());
+						inEnemyID = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			Unit* selectedUnit = NULL;
+			Building* targetEnemyBuilding = NULL;
+			unitsLock.lock();
+			for (auto unit : *units)
+			{
+				if (unit->getUnitID() == id)
+				{
+					selectedUnit = unit;
+					break;
+				}
+			}
+			unitsLock.unlock();
+			
+			buildingsLock.lock();
+			for (auto building : *buildings)
+			{
+				if (building->getID() == enemyID)
+				{
+					targetEnemyBuilding = building;
+					break;
+				}
+			}
+			buildingsLock.unlock();
+
+			Tile* currentTile = NULL;
+			for (auto tile : *(game->getCurrentLevel()->getTiles()))
+			{
+				Ogre::Vector3 currentPosition = targetEnemyBuilding->getPosition();
+				Ogre::Vector3 tilesPosition = tile->getPosition();
+				if (currentPosition.x > tilesPosition.x - (tile->getScale() / 2) && currentPosition.x < tilesPosition.x + (tile->getScale() / 2)) // if x
+				{
+					if (currentPosition.z > tilesPosition.z - (tile->getScale() / 2) && currentPosition.z < tilesPosition.z + (tile->getScale() / 2)) // if y
+					{
+						currentTile = tile;
+						break;
+					}
+				}
+			}
+
+			UnitPathFindingStruct data;
+			data.unit = selectedUnit;
+			data.destinationTile = currentTile;
+			data.targetEnemy = NULL;
+			data.targetEnemyBuilding = targetEnemyBuilding;
 			pathFindingLock.lock();
 			pathFindingQueue->push_back(data);
 			pathFindingLock.unlock();
@@ -515,7 +689,18 @@ void Server::sendBuildingToClient(Building* building)
 	message += std::to_string(building->getControllingPlayerID());
 	message += "</PlayerID><Type>";
 	message += std::to_string(building->getType());
-	message += "</Type><Queue>";
+	message += "</Type>";
+	message += "<Alive>";
+	if (building->isDestroyed())
+	{
+		message += std::to_string(1);
+	}
+	else
+	{
+		message += std::to_string(0);
+	}
+	message += "</Alive>";
+	message += "<Queue>";
 	for (int j = 0; j < building->getCurrentSizeOfQueue(); j++)
 	{
 		message += "<Item>";
@@ -560,6 +745,31 @@ void Server::sendProjectileToClient(Projectile* projectile)
 	message += "<Alive>";;
 	message += std::to_string(!projectile->isDestroyed());
 	message += "</Alive>";
+
+	unsigned short length = message.length();
+	//std::cout << "Length of message to send: " << length << std::endl;
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	//std::cout << "Building position: " << building->getPosition() << std::endl;
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
+}
+
+
+void Server::sendWinMessage(int winnerID)
+{
+	//std::cout << "Sending building to clients: " << building->getPosition() << std::endl;
+	char sendBuffer[1024];
+	sendBuffer[0] = 0x08;
+	std::string message = "<ID>" + std::to_string(winnerID);
+	message += "</ID>";
 
 	unsigned short length = message.length();
 	//std::cout << "Length of message to send: " << length << std::endl;
