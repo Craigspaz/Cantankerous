@@ -16,6 +16,7 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	buildings = new std::vector<Building*>();
 	projectiles = new std::vector<Projectile*>();
 	numberOfPlayers = 1;
+	sentWinMessage = false;
 
 	sock = Messages::createSocket();
 	connection.sin_family = AF_INET;
@@ -32,8 +33,8 @@ Server::Server(Game* game, Ogre::SceneManager* sceneManager)
 	Building* building2 = new Building(Ogre::Vector3(1800, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
 	addBuilding(building2);
 
-	Building* test2 = new Building(Ogre::Vector3(100, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
-	addBuilding(test2);
+	//Building* test2 = new Building(Ogre::Vector3(100, 20, 100), this->sceneManager, 2, BUILDING_CONSTRUCTOR);
+	//addBuilding(test2);
 	
 }
 
@@ -197,6 +198,51 @@ void Server::update()
 	}
 	buildingsLock.unlock();
 
+
+	if (!sentWinMessage)
+	{
+		bool allUnitsAreOnePlayers = true;
+		bool allBuildingsAreTheSamePlayers = true;
+		int pID = -1;
+		unitsLock.lock();
+		for (auto unit : *units)
+		{
+			if (pID == -1)
+			{
+				pID = unit->getPlayerControlledBy();
+				continue;
+			}
+			if (unit->getPlayerControlledBy() != pID)
+			{
+				allUnitsAreOnePlayers = false;
+				unitsLock.unlock();
+				return;
+			}
+		}
+		unitsLock.unlock();
+		buildingsLock.lock();
+		for (auto building : *buildings)
+		{
+			if (pID == -1)
+			{
+				pID = building->getControllingPlayerID();
+				continue;
+			}
+			if (building->getControllingPlayerID() != pID)
+			{
+				allBuildingsAreTheSamePlayers = false;
+				buildingsLock.unlock();
+				return;
+			}
+		}
+		buildingsLock.unlock();
+		if (allUnitsAreOnePlayers && allBuildingsAreTheSamePlayers)
+		{
+			// Someone wins
+			sendWinMessage(pID);
+			sentWinMessage = true;
+		}
+	}
 }
 
 void Server::listenForConnections()
@@ -699,6 +745,31 @@ void Server::sendProjectileToClient(Projectile* projectile)
 	message += "<Alive>";;
 	message += std::to_string(!projectile->isDestroyed());
 	message += "</Alive>";
+
+	unsigned short length = message.length();
+	//std::cout << "Length of message to send: " << length << std::endl;
+	sendBuffer[1] = length & 0xFF00;
+	sendBuffer[2] = length & 0x00FF;
+	short i = 0;
+	for (i = 0; i < length; i++)
+	{
+		sendBuffer[i + 3] = message.at(i);
+	}
+	//std::cout << "Building position: " << building->getPosition() << std::endl;
+	for (auto s : *sockets)
+	{
+		Messages::sendMessage(s, sendBuffer, length + 3);
+	}
+}
+
+
+void Server::sendWinMessage(int winnerID)
+{
+	//std::cout << "Sending building to clients: " << building->getPosition() << std::endl;
+	char sendBuffer[1024];
+	sendBuffer[0] = 0x08;
+	std::string message = "<ID>" + std::to_string(winnerID);
+	message += "</ID>";
 
 	unsigned short length = message.length();
 	//std::cout << "Length of message to send: " << length << std::endl;

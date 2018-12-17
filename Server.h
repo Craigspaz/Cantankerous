@@ -31,6 +31,7 @@ private:
 	void addBuilding(Building* building);
 
 	void sendProjectileToClient(Projectile* projectile);
+	void sendWinMessage(int winnerID);
 
 	std::vector<SOCKET>* sockets;
 
@@ -63,6 +64,7 @@ private:
 
 	std::vector<Projectile*>* projectiles;
 	std::mutex projectilesLock;
+	bool sentWinMessage;
 
 };
 

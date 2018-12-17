@@ -197,7 +197,7 @@ void Game::buttonHit(Button* button)
 		trayManager->destroyAllWidgets();
 		return;
 	}
-	else if (button->getName() == "Exit")
+	else if (button->getName() == "Exit" || button->getName() == "WinStatus")
 	{
 		exit(0);
 	}
@@ -446,4 +446,10 @@ bool Game::mouseWheelRolled(const MouseWheelEvent& event)
 Level* Game::getCurrentLevel()
 {
 	return currentLevel;
+}
+
+void Game::showWinMessage(std::string message)
+{
+	//trayManager->destroyAllWidgets();
+	//trayManager->createButton(OgreBites::TL_CENTER, "WinStatus", "You Win");
 }

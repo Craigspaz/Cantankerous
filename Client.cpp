@@ -871,7 +871,46 @@ void Client::receiveMessages()
 			projectilesToUpdate->push_back(data);
 			projectilesToUpdateLock.unlock();
 		}
+		else if (buffer[0] == 0x08)
+		{
+			buffer[bytesReceived] = '\0';
+			char* tmpStart = buffer + 3;
 
+			bool inID = false;
+
+			int id = -1;
+
+			char* token = strtok(tmpStart, ">");
+			while (token != NULL)
+			{
+				std::string tmp = token;
+				bool setFlag = false;
+				if (tmp == "<ID")
+				{
+					inID = true;
+					setFlag = true;
+				}
+				if (!setFlag)
+				{
+					if (inID)
+					{
+						id = std::atoi(tmp.substr(0, tmp.find("</ID")).c_str());
+						inID = false;
+					}
+				}
+				token = strtok(NULL, ">");
+			}
+			if (id == this->playerID)
+			{
+				std::cout << "You win!" << std::endl;
+				game->showWinMessage("You Win");
+			}
+			else
+			{
+				std::cout << "You Lose!" << std::endl;
+				game->showWinMessage("You Lose");
+			}
+		}
 	}
 }
 
