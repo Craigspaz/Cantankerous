@@ -4,6 +4,8 @@ Created by Craig Ferris
 
 ### Videos
 
+*Click on the images of the videos to go to the video*
+
 - Final Video 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/4qI8E6tPJX0/maxresdefault.jpg)](https://www.youtube.com/watch?v=4qI8E6tPJX0)
 - Second Status Update Video
@@ -29,7 +31,7 @@ Once the client establishes the connection with the server it will send a Hello 
 The client acts as a dumb terminal in this model. The server is the brains behind the entire game. If the clients want to do something with a short list of exceptions it will need to ask the server.
 For example, the client can move the camera around freely without asking for the server to manage that. The client can also determine what the user clicks on. If the client selects a tank on the battlefield the client will determine that the tank was selected and it will keep track of this and not tell the server. This is because the server does not need to know about what the client has selected.
 If the client wants to move a tank it must ask the server to move it. The client will send a message to the server asking for it to move the tank to a certain destination. The server will then use A\* pathfinding to determine the path the tank must take. Then it will simulate the tanks movement. The server will send the clients update about where the tank is and the direction it is facing. 
-When a client receive one of these messages its job is to update the world based on what the server said. The server will send data about each item even if it is not needed just in case the client lost a packet. *(Note this should not happend since the game uses TCP protocal for the network packets.)*
+When a client receives one of these messages its job is to update the world based on what the server said. The server will send data about each item even if it is not needed just in case the client lost a packet. *(Note this should not happend since the game uses TCP protocal for the network packets.)*
 
 Every item in the game has a unique identifier which the client and server use to communicate which items they are talking about.
 If a client wants a tank to attack another tank or a building it must ask the server to do this. For example, every unit and building has an ID and every tile has a (x,y) coordinate. 
