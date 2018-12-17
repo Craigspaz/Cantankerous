@@ -26,7 +26,7 @@ You win the game if you destroy all other players' buildings and tanks.
 ### Technical Component
 
 This game was made using Ogre3D, and WinSockets on Windows. 
-The techincal component was network multiplayer. Every instance of the game can be either the server or a client. If the user clicks Host Game on the main menu they will host a game. Their game will start listening on port 1234 for connections. Clients will need to click Join Game and type the servers IP address in to connect. 
+My techincal component was network multiplayer. Every instance of the game can be either the server or a client. If the user clicks Host Game on the main menu they will host a game. Their game will start listening on port 1234 for connections. A client will also get started on the same instance to allow them to play. They will be player 1. Clients will need to click Join Game and type the servers IP address in to connect. 
 Once the client establishes the connection with the server it will send a Hello message to the server to get information such as which level to load and what player number it is.
 The client acts as a dumb terminal in this model. The server is the brains behind the entire game. If the clients want to do something with a short list of exceptions it will need to ask the server.
 For example, the client can move the camera around freely without asking for the server to manage that. The client can also determine what the user clicks on. If the client selects a tank on the battlefield the client will determine that the tank was selected and it will keep track of this and not tell the server. This is because the server does not need to know about what the client has selected.
@@ -50,6 +50,11 @@ A message is a string of XML. For example, the following may be a response to th
 ```
 
 The XML is expanded depending on what needs to be sent. The receiving end parses the XML.
+
+The client and server have multiple threads. The server has an instance of a Server and an instance of a Client running at the same time. The main thread controls updates both the client and server 60 times a second. The server also has a thread that listens for connections. If a connection is established another thread is created which will just listen for messages from the client that started the connection.
+The client also has a thread that listens for messages from the server. 
+
+The use of multiple threads allows the client and server to listen for messages and process them while other things are happening in the game. This increases performance. The only issue with this design is the Ogre3D does not support multithreading. So data received in a thread that is not the main thread is stored in shared memory. The main thread will then see the shared memory has changed and update the game accordingly.
 
 
 ### Controls
