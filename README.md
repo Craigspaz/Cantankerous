@@ -185,6 +185,36 @@ Client:
     V             V
 ```
 
+#### How the network multiplayer was implemented in more details.
+
+I used WinSockets which is like C Sockets but made for Windows.
+
+I wrote a wrapper around the core functions. I did this to try to encapuslate the socket code from the rest of the game. The wrapper functions also handle some basic error checking to make sure the socket is working. This helps keep the rest of the game cleaner.
+
+WinSockets uses the following core functions.
+
+``` 
+	int send(socket, message, length, flags);
+	int recv(socket, buffer, sizeOfBuffer, flags);
+```
+
+I wrote a wrapper functions which look similar but eliminate the flags parameter and also check to see if there was an error sending or receiving data.
+
+```
+	int sendMessage(SOCKET socket, char* message, const int length);
+	int receiveMessage(SOCKET sock, char* buffer, const int bufferSize);
+```
+
+In the update loop for the server the server will loop through all of the units in the game and using the wrapper functions above send all of the clients XML formatted messages telling them details about the state of the unit.
+For example, it may say unit with ID=4 is now at position (34, 22, 8) and is facing in direction (0,1,0) and is alive. The clients will upon receipt of this message look up the unit with ID=4 and update the position and facing direction.
+The server will do the same thing with the buildings in the game.
+
+When a client wants to tell the server to do something such as move a unit to a specific location it will also use the wrapper functions mentioned above. The client will send an XML formatted message saying unit with ID=7 wants to travel to tile (3, 4).
+The server will upon receipt run the A\* pathfinding algorithm to find a path to the specified tile. The client will see the update in the servers unit update messages described above when it is told about the units position.
+
+The server will send information even if the client already has the latest information on something. This is because a client may lose packets. (This is using TCP protocol so it should not happen.) Also if a client joins the game late it will need to know about everything in the game.
+It would not be good if the player can only see a few units on the battlefield and not all of them. They may see their units randomly disapear. But in reality they were just not notified of an update.
+
 ### Controls
 
 Arrow keys on keyboard move camera around.
@@ -202,3 +232,5 @@ You will need to install the [Ogre3D SDK](https://www.ogre3d.org/) on your compu
 Inside the resources directory in this repository there is a directory called "media". Copy that folder over your Ogre3d SDK's media directory. This will add models and textures this game uses.
 
 Then using CMake set the source files in this repository as your source directory and created a build directory somewhere and build to that directory. Once you configure and generate files based on your system you should be able to compile and run the game. **NOTE: This game uses WinSockets so it is only available at the moment on Windows**.
+
+You may either need to copy the compiled executable in the Ogre3D SDK/bin directory or set that directory as your working directory in your favorite IDE for the game to run properly. (You may need to do this if you are getting missing Ogre_____.dll errors when you try to run the game.
