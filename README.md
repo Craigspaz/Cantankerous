@@ -62,127 +62,127 @@ Below is a diagram showing where the threads are created for both the client and
 ```
 Server:
 
-	|
-	Main Thread (Created when the game launches)
-	|\
-	| \
-	|  \
-	|   \
-	|    \
-	|     \
-	|      \
-	|       \
-	|        \
-	|         \
-	|          \
-	|           \
-	|            \
-	|             \
-	|              \
-	|	            \
-	|				 \	
-	|				  \
-	|				   \
-	|			        \
-	|					 \
-	|				      \
-	|					   \
-	|					    \
-	|						 \
-	|						  \
-	|						   \
-	|						    \
-	|							 \
-	|							  \
-	|							   \
-	|							    \
-	|								 \
-	|								  \
-	|								   \
-	|								    \ 
-	|									 \ 
-	|									  \ 
-	|									   \
-	|									    \
-	|										 \ 
-	|										  \ 
-	|										   \ 
-	|										    \ 
-	|											 \ 
-	|											  \ 
-	|											   \
-	|											    \ 
-	|												 \ 
-	|												  \
-	|												   \ 
-	|												    \
-	|													 \
-	|													  \
-	|													   \ 
-	|													    \
-	|														 \ 
-	|														  \
-	|														   \
-	|														    \
-	|															 \
-	|															  \
-	|															   \
-	|															    \
-	|																Creates thread listening for connections
-	|               												|
-	|               												|
-	|               												|
-	|               												|
-	|               												If a connection from a client is established
-	|               												|\
-	|               												| \
-	|               												|  \
-	|               												|   \
-	|               												|    \
-	|               												|     \
-	|\              												|      \
-	| \             												|       |\
-	|  \            												|       | \
-	|   \           												|       |  \
-	|    \          												|       |   (?) The number of threads depends on the number of clients.
-	|     Client creates thread to listen for messages from server  |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	|	  |														    |       |
-	V     V															V		V
+    |
+    Main Thread (Created when the game launches)
+    |\
+    | \
+    |  \
+    |   \
+    |    \
+    |     \
+    |      \
+    |       \
+    |        \
+    |         \
+    |          \
+    |           \
+    |            \
+    |             \
+    |              \
+    |               \
+    |                \    
+    |                 \
+    |                  \
+    |                   \
+    |                    \
+    |                     \
+    |                      \
+    |                       \
+    |                        \
+    |                         \
+    |                          \
+    |                           \
+    |                            \
+    |                             \
+    |                              \
+    |                               \
+    |                                \
+    |                                 \
+    |                                  \
+    |                                   \ 
+    |                                    \ 
+    |                                     \ 
+    |                                      \
+    |                                       \
+    |                                        \ 
+    |                                         \ 
+    |                                          \ 
+    |                                           \ 
+    |                                            \ 
+    |                                             \ 
+    |                                              \
+    |                                               \ 
+    |                                                \ 
+    |                                                 \
+    |                                                  \ 
+    |                                                   \
+    |                                                    \
+    |                                                     \
+    |                                                      \ 
+    |                                                       \
+    |                                                        \ 
+    |                                                         \
+    |                                                          \
+    |                                                           \
+    |                                                            \
+    |                                                             \
+    |                                                              \
+    |                                                               \
+    |                                                                Creates thread listening for connections
+    |                                                                |
+    |                                                                |
+    |                                                                |
+    |                                                                |
+    |                                                                If a connection from a client is established
+    |                                                                |\
+    |                                                                | \
+    |                                                                |  \
+    |                                                                |   \
+    |                                                                |    \
+    |                                                                |     \
+    |\                                                               |      \
+    | \                                                              |       |\
+    |  \                                                             |       | \
+    |   \                                                            |       |  \
+    |    \                                                           |       |   (?) The number of threads depends on the number of clients.
+    |     Client creates thread to listen for messages from server   |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    V      V                                                         V        V
 
 
 Client:
 
-	|
-	Main Thread (Created when the game launches)
-	|\
-	| \
-	|  \
-	|   \
-	|    \
-	|     \
-	|      \
-	|       \
-	|        \
-	|         \
-	|          \
-	|           \
-	|            \
-	|             Client creates thread to listen for messages from server
-	|	          |
-	|	          |
-	|	          |
-	|	          |
-	|	          |
-	|	          |
-	V			  V
+    |
+    Main Thread (Created when the game launches)
+    |\
+    | \
+    |  \
+    |   \
+    |    \
+    |     \
+    |      \
+    |       \
+    |        \
+    |         \
+    |          \
+    |           \
+    |            \
+    |             Client creates thread to listen for messages from server
+    |             |
+    |             |
+    |             |
+    |             |
+    |             |
+    |             |
+    V             V
 ```
 
 ### Controls
