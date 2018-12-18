@@ -79,8 +79,9 @@ Server:
     |            \
     |             \
     |              \
-    |                \
-    |                 \    
+    |               \
+    |                \    
+    |                 \
     |                  \
     |                   \
     |                    \
@@ -98,64 +99,63 @@ Server:
     |                                \
     |                                 \
     |                                  \
-    |                                   \
+    |                                   \ 
     |                                    \ 
     |                                     \ 
-    |                                      \ 
+    |                                      \
     |                                       \
-    |                                        \
+    |                                        \ 
     |                                         \ 
     |                                          \ 
     |                                           \ 
     |                                            \ 
     |                                             \ 
-    |                                              \ 
-    |                                               \
+    |                                              \
+    |                                               \ 
     |                                                \ 
-    |                                                 \ 
-    |                                                  \
-    |                                                   \ 
+    |                                                 \
+    |                                                  \ 
+    |                                                   \
     |                                                    \
     |                                                     \
-    |                                                      \
-    |                                                       \ 
-    |                                                        \
-    |                                                         \ 
+    |                                                      \ 
+    |                                                       \
+    |                                                        \ 
+    |                                                         \
     |                                                          \
     |                                                           \
     |                                                            \
     |                                                             \
     |                                                              \
     |                                                               \
-    |                                                                \
     |                                                                Creates thread listening for connections
-    |                                                               |
-    |                                                               |
-    |                                                               |
-    |                                                               |
-    |                                                               If a connection from a client is established
-    |                                                               |\
-    |                                                               | \
-    |                                                               |  \
-    |                                                               |   \
-    |                                                               |    \
-    |                                                               |     \
-    |\                                                              |      \
-    | \                                                             |       |\
-    |  \                                                            |       | \
-    |   \                                                           |       |  \
-    |    \                                                          |       |   (?) The number of threads depends on the number of clients.
-    |     Client creates thread to listen for messages from server  |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    |      |                                                            |       |
-    V     V                                                            V        V
+    |                                                                |
+    |                                                                |
+    |                                                                |
+    |                                                                |
+    |                                                                If a connection from a client is established
+    |                                                                |\
+    |                                                                | \
+    |                                                                |  \
+    |                                                                |   \
+    |                                                                |    \
+    |                                                                |     \
+    |\                                                               |      \
+    | \                                                              |       |\
+    |  \                                                             |       | \
+    |   \                                                            |       |  \
+    |    \                                                           |       |   (?) The number of threads depends on the number of clients.
+    |     Client creates thread to listen for messages from server   |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    |      |                                                         |       |
+    V      V                                                         V        V
 
 
 Client:
@@ -176,13 +176,13 @@ Client:
     |           \
     |            \
     |             Client creates thread to listen for messages from server
-    |              |
-    |              |
-    |              |
-    |              |
-    |              |
-    |              |
-    V              V
+    |             |
+    |             |
+    |             |
+    |             |
+    |             |
+    |             |
+    V             V
 ```
 
 ### Controls
